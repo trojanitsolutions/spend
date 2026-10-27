@@ -11,15 +11,15 @@ app_license = "mit"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "spend",
-# 		"logo": "/assets/spend/logo.png",
-# 		"title": "spend",
-# 		"route": "/spend",
-# 		"has_permission": "spend.api.permission.has_app_permission",
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "spend",
+		"logo": "/assets/spend/logo.svg",
+		"title": "Spend",
+		"route": "/spend",
+		"has_permission": "spend.api.has_app_permission",
+	}
+]
 
 # The dock, the rail down the left of the desk, is a document rather than a hook. Author it in
 # Manage Dock on a developer-mode site and press Export to App, and it is written to
@@ -74,6 +74,11 @@ app_license = "mit"
 # 	"Role": "home_page"
 # }
 
+# serve the frappe-ui frontend (frontend/) for every path under /spend
+website_route_rules = [
+	{"from_route": "/spend/<path:app_path>", "to_route": "spend"},
+]
+
 # Generators
 # ----------
 
@@ -96,7 +101,11 @@ app_license = "mit"
 # ------------
 
 # before_install = "spend.install.before_install"
-# after_install = "spend.install.after_install"
+after_install = "spend.spend.setup.after_install"
+# the workflow fixtures are imported after install and on every migrate; these put back
+# the approval switches from Spend Settings over them
+after_sync = "spend.spend.approval.apply_settings"
+after_migrate = "spend.spend.approval.apply_settings"
 
 # Uninstallation
 # ------------
@@ -164,6 +173,72 @@ app_license = "mit"
 
 # Scheduled Tasks
 # ---------------
+
+scheduler_events = {
+	"daily": [
+		"spend.spend.depreciation.post_depreciation_entries_daily",
+		"spend.spend.doctype.purchase_invoice.purchase_invoice.update_overdue_invoices",
+		"spend.spend.doctype.recurring_payment.recurring_payment.post_recurring_payments_daily",
+		"spend.spend.notifications.notify_bills_due",
+		"spend.spend.doctype.task.task.set_tasks_as_overdue",
+	],
+}
+
+doc_events = {
+	doctype: {
+		"on_cancel": "spend.spend.approval.set_cancelled_state",
+		"on_change": "spend.spend.notifications.on_approval_change",
+	}
+	for doctype in (
+		"Purchase Invoice",
+		"Supplier Payment",
+		"Journal Entry",
+		"Recurring Payment",
+		"Budget",
+		"Project",
+	)
+}
+
+# The approval workflows ship as fixtures. After changing them on a developer-mode site, run
+# `bench --site <site> export-fixtures --app spend`.
+APPROVAL_WORKFLOWS = [
+	f"{doctype} Approval"
+	for doctype in (
+		"Purchase Invoice",
+		"Supplier Payment",
+		"Journal Entry",
+		"Recurring Payment",
+		"Budget",
+		"Project",
+	)
+]
+fixtures = [
+	{
+		"dt": "Workflow State",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Draft",
+					"Pending Manager Approval",
+					"Pending GM Approval",
+					"Approved",
+					"Rejected",
+					"Cancelled",
+				],
+			]
+		],
+	},
+	{
+		"dt": "Workflow Action Master",
+		"filters": [["name", "in", ["Send for Approval", "Approve", "Reject", "Resubmit", "Revise"]]],
+	},
+	{"dt": "Workflow", "filters": [["name", "in", APPROVAL_WORKFLOWS]]},
+]
+
+# Spend sends these by email itself, when Spend Settings allows it
+notification_skip_email_types = ["Approval", "Budget Alert", "Bill Reminder", "Recurring Payment"]
 
 # scheduler_events = {
 # 	"all": [
@@ -271,4 +346,3 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

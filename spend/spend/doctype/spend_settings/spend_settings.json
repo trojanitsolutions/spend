@@ -1,0 +1,184 @@
+{
+ "actions": [],
+ "creation": "2026-10-27 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_approvals",
+  "approvals_help",
+  "approve_purchase_invoice",
+  "approve_supplier_payment",
+  "approve_journal_entry",
+  "column_break_approvals",
+  "approve_recurring_payment",
+  "approve_budget",
+  "approve_project",
+  "allow_self_approval",
+  "section_break_alerts",
+  "budget_alert_threshold",
+  "notify_budget_exceeded",
+  "notify_recurring",
+  "column_break_alerts",
+  "notify_bills_due",
+  "bill_due_days",
+  "send_email"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_approvals",
+   "fieldtype": "Section Break",
+   "label": "Approvals"
+  },
+  {
+   "fieldname": "approvals_help",
+   "fieldtype": "HTML",
+   "options": "<p class='text-muted'>Documents of the checked types need an Accounts Manager and then a General Manager to approve them before they are posted.</p>"
+  },
+  {
+   "default": "1",
+   "fieldname": "approve_purchase_invoice",
+   "fieldtype": "Check",
+   "label": "Bills"
+  },
+  {
+   "default": "1",
+   "fieldname": "approve_supplier_payment",
+   "fieldtype": "Check",
+   "label": "Supplier Payments"
+  },
+  {
+   "default": "1",
+   "fieldname": "approve_journal_entry",
+   "fieldtype": "Check",
+   "label": "Journal Entries"
+  },
+  {
+   "fieldname": "column_break_approvals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "approve_recurring_payment",
+   "fieldtype": "Check",
+   "label": "Recurring Payments"
+  },
+  {
+   "default": "1",
+   "fieldname": "approve_budget",
+   "fieldtype": "Check",
+   "label": "Budgets"
+  },
+  {
+   "default": "1",
+   "fieldname": "approve_project",
+   "fieldtype": "Check",
+   "label": "Projects"
+  },
+  {
+   "default": "0",
+   "description": "When off, the person who created a document cannot approve it",
+   "fieldname": "allow_self_approval",
+   "fieldtype": "Check",
+   "label": "Allow approvers to approve their own documents"
+  },
+  {
+   "fieldname": "section_break_alerts",
+   "fieldtype": "Section Break",
+   "label": "Alerts"
+  },
+  {
+   "default": "80",
+   "description": "Alert when a project or cost center budget passes this share of its limit",
+   "fieldname": "budget_alert_threshold",
+   "fieldtype": "Percent",
+   "label": "Budget Alert Threshold"
+  },
+  {
+   "default": "1",
+   "fieldname": "notify_budget_exceeded",
+   "fieldtype": "Check",
+   "label": "Alert when a budget is exceeded"
+  },
+  {
+   "default": "1",
+   "fieldname": "notify_recurring",
+   "fieldtype": "Check",
+   "label": "Alert when a recurring payment posts or fails"
+  },
+  {
+   "fieldname": "column_break_alerts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "notify_bills_due",
+   "fieldtype": "Check",
+   "label": "Daily reminder of bills due"
+  },
+  {
+   "default": "3",
+   "depends_on": "notify_bills_due",
+   "description": "Bills due within this many days are included, along with overdue bills",
+   "fieldname": "bill_due_days",
+   "fieldtype": "Int",
+   "label": "Bills Due Within (Days)",
+   "non_negative": 1
+  },
+  {
+   "default": "1",
+   "description": "Needs an outgoing Email Account. Users can turn email off in their Notification Settings.",
+   "fieldname": "send_email",
+   "fieldtype": "Check",
+   "label": "Also send notifications by email"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-27 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "spend",
+ "name": "Spend Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "General Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts User",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

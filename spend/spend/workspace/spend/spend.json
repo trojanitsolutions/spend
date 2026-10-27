@@ -1,0 +1,511 @@
+{
+ "app": "spend",
+ "charts": [],
+ "content": "[{\"id\": \"h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Spend</b></span>\", \"col\": 12}}, {\"id\": \"s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"New Expense\", \"col\": 4}}, {\"id\": \"s6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Bills\", \"col\": 4}}, {\"id\": \"s7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Projects\", \"col\": 4}}, {\"id\": \"s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Assets\", \"col\": 4}}, {\"id\": \"s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Budgets\", \"col\": 4}}, {\"id\": \"s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Chart of Accounts\", \"col\": 4}}, {\"id\": \"s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Depreciation Due\", \"col\": 4}}, {\"id\": \"s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Spend App\", \"col\": 4}}, {\"id\": \"sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"cApprovals\", \"type\": \"card\", \"data\": {\"card_name\": \"Approvals\", \"col\": 4}}, {\"id\": \"c4\", \"type\": \"card\", \"data\": {\"card_name\": \"Purchasing\", \"col\": 4}}, {\"id\": \"c5\", \"type\": \"card\", \"data\": {\"card_name\": \"Projects\", \"col\": 4}}, {\"id\": \"c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Accounting\", \"col\": 4}}, {\"id\": \"c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Assets\", \"col\": 4}}, {\"id\": \"c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Asset Reports\", \"col\": 4}}, {\"id\": \"c3\", \"type\": \"card\", \"data\": {\"card_name\": \"Budget & Spending Reports\", \"col\": 4}}]",
+ "creation": "2026-10-26 18:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "wallet",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Spend",
+ "links": [
+  {
+   "hidden": 0,
+   "idx": 1,
+   "is_query_report": 0,
+   "label": "Approvals",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "idx": 2,
+   "is_query_report": 0,
+   "label": "My Approvals",
+   "link_count": 0,
+   "link_to": "Workflow Action",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 3,
+   "is_query_report": 0,
+   "label": "Spend Settings",
+   "link_count": 0,
+   "link_to": "Spend Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 4,
+   "is_query_report": 0,
+   "label": "Workflow",
+   "link_count": 0,
+   "link_to": "Workflow",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 5,
+   "is_query_report": 0,
+   "label": "Purchasing",
+   "link_count": 8,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "idx": 6,
+   "is_query_report": 0,
+   "label": "Supplier",
+   "link_count": 0,
+   "link_to": "Supplier",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 6,
+   "is_query_report": 0,
+   "label": "Item",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 6,
+   "is_query_report": 0,
+   "label": "Item Group",
+   "link_count": 0,
+   "link_to": "Item Group",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 6,
+   "is_query_report": 0,
+   "label": "UOM",
+   "link_count": 0,
+   "link_to": "UOM",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 7,
+   "is_query_report": 0,
+   "label": "Purchase Invoice",
+   "link_count": 0,
+   "link_to": "Purchase Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 8,
+   "is_query_report": 0,
+   "label": "Supplier Payment",
+   "link_count": 0,
+   "link_to": "Supplier Payment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 9,
+   "is_query_report": 1,
+   "label": "Supplier Outstanding",
+   "link_count": 0,
+   "link_to": "Supplier Outstanding",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 10,
+   "is_query_report": 0,
+   "label": "Recurring Payment",
+   "link_count": 0,
+   "link_to": "Recurring Payment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 11,
+   "is_query_report": 0,
+   "label": "Projects",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "idx": 12,
+   "is_query_report": 0,
+   "label": "Project",
+   "link_count": 0,
+   "link_to": "Project",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 13,
+   "is_query_report": 0,
+   "label": "Task",
+   "link_count": 0,
+   "link_to": "Task",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 14,
+   "is_query_report": 1,
+   "label": "Project Spend",
+   "link_count": 0,
+   "link_to": "Project Spend",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 15,
+   "is_query_report": 0,
+   "label": "Expense Category",
+   "link_count": 0,
+   "link_to": "Expense Category",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 16,
+   "is_query_report": 1,
+   "label": "Project Category Monthly",
+   "link_count": 0,
+   "link_to": "Project Category Monthly",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 17,
+   "is_query_report": 0,
+   "label": "Accounting",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "idx": 18,
+   "is_query_report": 0,
+   "label": "Journal Entry",
+   "link_count": 0,
+   "link_to": "Journal Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 19,
+   "is_query_report": 0,
+   "label": "GL Entry",
+   "link_count": 0,
+   "link_to": "GL Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 20,
+   "is_query_report": 0,
+   "label": "Account",
+   "link_count": 0,
+   "link_to": "Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 21,
+   "is_query_report": 0,
+   "label": "Cost Center",
+   "link_count": 0,
+   "link_to": "Cost Center",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 22,
+   "is_query_report": 0,
+   "label": "Fiscal Year",
+   "link_count": 0,
+   "link_to": "Fiscal Year",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 23,
+   "is_query_report": 0,
+   "label": "Assets",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "idx": 24,
+   "is_query_report": 0,
+   "label": "Asset",
+   "link_count": 0,
+   "link_to": "Asset",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 25,
+   "is_query_report": 0,
+   "label": "Asset Depreciation Schedule",
+   "link_count": 0,
+   "link_to": "Asset Depreciation Schedule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 26,
+   "is_query_report": 0,
+   "label": "Asset Reports",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "idx": 27,
+   "is_query_report": 1,
+   "label": "Asset Register",
+   "link_count": 0,
+   "link_to": "Asset Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 28,
+   "is_query_report": 1,
+   "label": "Asset Depreciation Schedule Report",
+   "link_count": 0,
+   "link_to": "Asset Depreciation Schedule Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 29,
+   "is_query_report": 1,
+   "label": "Depreciation Due",
+   "link_count": 0,
+   "link_to": "Depreciation Due",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 30,
+   "is_query_report": 1,
+   "label": "Asset Book Value",
+   "link_count": 0,
+   "link_to": "Asset Book Value",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 31,
+   "is_query_report": 0,
+   "label": "Budget & Spending Reports",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "idx": 32,
+   "is_query_report": 0,
+   "label": "Budget",
+   "link_count": 0,
+   "link_to": "Budget",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 33,
+   "is_query_report": 1,
+   "label": "Budget vs Actual",
+   "link_count": 0,
+   "link_to": "Budget vs Actual",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 34,
+   "is_query_report": 1,
+   "label": "Budget Utilization",
+   "link_count": 0,
+   "link_to": "Budget Utilization",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 35,
+   "is_query_report": 1,
+   "label": "Cost Center-wise Spending",
+   "link_count": 0,
+   "link_to": "Cost Center-wise Spending",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "idx": 36,
+   "is_query_report": 1,
+   "label": "Chart of Accounts",
+   "link_count": 0,
+   "link_to": "Chart of Accounts",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-27 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "spend",
+ "name": "Spend",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "New",
+   "idx": 1,
+   "label": "New Expense",
+   "link_to": "Journal Entry",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "idx": 2,
+   "label": "Bills",
+   "link_to": "Purchase Invoice",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "List",
+   "idx": 3,
+   "label": "Projects",
+   "link_to": "Project",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "idx": 4,
+   "label": "Assets",
+   "link_to": "Asset",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "idx": 5,
+   "label": "Budgets",
+   "link_to": "Budget",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "Tree",
+   "idx": 6,
+   "label": "Chart of Accounts",
+   "link_to": "Account",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "idx": 7,
+   "label": "Depreciation Due",
+   "link_to": "Depreciation Due",
+   "type": "Report"
+  },
+  {
+   "color": "Cyan",
+   "idx": 8,
+   "label": "Spend App",
+   "type": "URL",
+   "url": "/spend"
+  }
+ ],
+ "standard": 1,
+ "title": "Spend",
+ "type": "Workspace"
+}

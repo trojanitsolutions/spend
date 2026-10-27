@@ -1,0 +1,198 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:company_name",
+ "creation": "2026-10-26 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company_name",
+  "abbr",
+  "default_currency",
+  "column_break_main",
+  "country",
+  "tax_id",
+  "date_of_incorporation",
+  "default_fiscal_year",
+  "section_break_coa",
+  "create_default_accounts",
+  "section_break_defaults",
+  "default_cash_account",
+  "default_payable_account",
+  "default_expense_account",
+  "default_cost_center",
+  "column_break_defaults",
+  "fixed_asset_account",
+  "accumulated_depreciation_account",
+  "depreciation_expense_account"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "Short code appended to account and cost center names, e.g. ACME",
+   "fieldname": "abbr",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Abbreviation",
+   "reqd": 1,
+   "set_only_once": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "default_currency",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Default Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Link",
+   "label": "Country",
+   "options": "Country"
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID"
+  },
+  {
+   "fieldname": "date_of_incorporation",
+   "fieldtype": "Date",
+   "label": "Date of Incorporation"
+  },
+  {
+   "fieldname": "default_fiscal_year",
+   "fieldtype": "Link",
+   "label": "Default Fiscal Year",
+   "options": "Fiscal Year"
+  },
+  {
+   "fieldname": "section_break_coa",
+   "fieldtype": "Section Break",
+   "label": "Chart of Accounts"
+  },
+  {
+   "default": "1",
+   "description": "Creates a standard account tree, a root cost center and the accounting defaults when the company is created",
+   "fieldname": "create_default_accounts",
+   "fieldtype": "Check",
+   "label": "Create Standard Chart of Accounts",
+   "set_only_once": 1
+  },
+  {
+   "collapsible": 0,
+   "fieldname": "section_break_defaults",
+   "fieldtype": "Section Break",
+   "label": "Accounting Defaults"
+  },
+  {
+   "fieldname": "default_cash_account",
+   "fieldtype": "Link",
+   "label": "Default Cash Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "default_payable_account",
+   "fieldtype": "Link",
+   "label": "Default Payable Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "default_expense_account",
+   "fieldtype": "Link",
+   "label": "Default Expense Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "default_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "column_break_defaults",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fixed_asset_account",
+   "fieldtype": "Link",
+   "label": "Default Fixed Asset Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "accumulated_depreciation_account",
+   "fieldtype": "Link",
+   "label": "Accumulated Depreciation Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "depreciation_expense_account",
+   "fieldtype": "Link",
+   "label": "Depreciation Expense Account",
+   "options": "Account"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-26 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "spend",
+ "name": "Company",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "quick_entry": 0,
+ "row_format": "Dynamic",
+ "search_fields": "abbr",
+ "sort_field": "company_name",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,250 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "hash",
+ "creation": "2026-10-26 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "posting_date",
+  "fiscal_year",
+  "company",
+  "account",
+  "cost_center",
+  "project",
+  "expense_category",
+  "expense_sub_category",
+  "column_break_1",
+  "debit",
+  "credit",
+  "currency",
+  "is_cancelled",
+  "section_break_voucher",
+  "voucher_type",
+  "voucher_no",
+  "voucher_subtype",
+  "voucher_detail_no",
+  "column_break_2",
+  "party_type",
+  "party",
+  "reference_type",
+  "reference_name",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "fiscal_year",
+   "fieldtype": "Link",
+   "label": "Fiscal Year",
+   "options": "Fiscal Year",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Account",
+   "options": "Account",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Cost Center",
+   "options": "Cost Center",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "expense_category",
+   "fieldtype": "Link",
+   "label": "Expense Category",
+   "options": "Expense Category",
+   "search_index": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "expense_sub_category",
+   "fieldtype": "Link",
+   "label": "Expense Sub Category",
+   "options": "Expense Category",
+   "search_index": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "debit",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Debit",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "credit",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Credit",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_cancelled",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Is Cancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_voucher",
+   "fieldtype": "Section Break",
+   "label": "Voucher"
+  },
+  {
+   "fieldname": "voucher_type",
+   "fieldtype": "Link",
+   "label": "Voucher Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voucher_no",
+   "fieldtype": "Dynamic Link",
+   "in_standard_filter": 1,
+   "label": "Voucher No",
+   "options": "voucher_type",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "voucher_subtype",
+   "fieldtype": "Data",
+   "label": "Entry Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voucher_detail_no",
+   "fieldtype": "Data",
+   "label": "Voucher Detail No",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "label": "Party Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "in_standard_filter": 1,
+   "label": "Party",
+   "options": "party_type",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "reference_type",
+   "fieldtype": "Link",
+   "label": "Reference Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Name",
+   "options": "reference_type",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "spend",
+ "name": "GL Entry",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "posting_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

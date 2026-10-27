@@ -53,3 +53,8 @@ jspm_packages/
 
 # Aider AI Chat
 .aider*
+
+# frappe-ui build output
+spend/public/frontend/
+spend/www/spend.html
+node_modules/
