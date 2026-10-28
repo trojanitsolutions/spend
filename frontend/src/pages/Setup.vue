@@ -19,9 +19,17 @@
 			<LinkField v-model="currency" doctype="Currency" label="Currency" :filters="{ enabled: 1 }" required />
 
 			<p class="text-sm text-ink-gray-5">Spend creates a standard chart of accounts and cost centers for this company.</p>
+
+			<div class="space-y-1 rounded-lg border border-outline-gray-1 p-3">
+				<FormControl v-model="demoData" type="checkbox" label="Add demo data" />
+				<p class="pl-6 text-sm text-ink-gray-5">
+					Sample suppliers, bills, payments, expenses, projects and assets for {{ companyName.trim() || "your company" }}, so you can explore Spend
+					before you add your own. You can clear it later in Settings.
+				</p>
+			</div>
 			<p v-if="error" class="text-sm text-ink-red-4" role="alert">{{ error }}</p>
 
-			<Button type="submit" variant="solid" class="w-full" label="Create company" :loading="saving" :disabled="!ready" />
+			<Button type="submit" variant="solid" class="w-full" :label="demoData ? 'Create company with demo data' : 'Create company'" :loading="saving" :disabled="!ready" />
 			<p class="text-center text-sm text-ink-gray-5">
 				Signed in as {{ session.fullName || session.user }}.
 				<button type="button" class="font-medium text-ink-gray-7 underline-offset-2 hover:underline" @click="logout">Log out</button>
@@ -44,6 +52,7 @@ const appLogo = window.app_logo || ""
 const companyName = ref("")
 const abbr = ref("")
 const currency = ref(session.defaultCurrency)
+const demoData = ref(false)
 const saving = ref(false)
 const error = ref("")
 let abbrEdited = false
@@ -74,15 +83,16 @@ async function create() {
 	saving.value = true
 	error.value = ""
 	try {
-		const { name } = await api(
+		const { name, demo_error } = await api(
 			"spend.spend.setup.setup_company",
-			{ company_name: companyName.value, abbr: abbr.value, currency: currency.value },
+			{ company_name: companyName.value, abbr: abbr.value, currency: currency.value, demo_data: demoData.value },
 			{ silent: true },
 		)
 		await reloadSession()
 		setCompany(name)
 		await router.replace("/")
-		toast.success(`${name} is ready`)
+		if (demo_error) toast.warning(`${name} is ready, but the demo data could not be added: ${demo_error}`)
+		else toast.success(demoData.value ? `${name} is ready with demo data` : `${name} is ready`)
 	} catch (e) {
 		error.value = errorMessage(e)
 	} finally {

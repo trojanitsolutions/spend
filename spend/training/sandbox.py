@@ -160,7 +160,9 @@ def reset_company(company: str) -> dict:
 	}
 
 
-def remove_document(doctype: str, name: str, failed: dict) -> bool:
+def remove_document(doctype: str, name: str, failed: dict, force: bool = True) -> bool:
+	"""Cancel and delete one document. `force` skips the link checks and its on_trash; without
+	it a master that other records still use fails instead of leaving them dangling."""
 	frappe.db.savepoint("training_reset")
 	try:
 		doc = frappe.get_doc(doctype, name)
@@ -168,7 +170,7 @@ def remove_document(doctype: str, name: str, failed: dict) -> bool:
 		doc.flags.ignore_links = True
 		if doc.docstatus == 1:
 			doc.cancel()
-		frappe.delete_doc(doctype, name, force=1, ignore_permissions=True, ignore_on_trash=True)
+		frappe.delete_doc(doctype, name, force=force, ignore_permissions=True, ignore_on_trash=force)
 		return True
 	except Exception as e:
 		frappe.db.rollback(save_point="training_reset")

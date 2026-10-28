@@ -41,6 +41,9 @@ def get_boot() -> dict:
 		fields=["name", "start_date", "end_date"],
 		order_by="start_date desc",
 	)
+	demo_companies = set(frappe.get_all("Demo Data Record", pluck="company", distinct=True))
+	for company in companies:
+		company["has_demo_data"] = company["name"] in demo_companies
 	user_company = frappe.defaults.get_user_default("Company")
 	blocked = set(get_blocked_modules())
 	return {

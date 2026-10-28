@@ -160,9 +160,10 @@ def setup_items():
 
 
 @frappe.whitelist(methods=["POST"])
-def setup_company(company_name: str, abbr: str, currency: str) -> dict:
+def setup_company(company_name: str, abbr: str, currency: str, demo_data: bool = False) -> dict:
 	"""First run: create the first company with its chart of accounts, and make Spend the
-	app every user lands on after login."""
+	app every user lands on after login. With `demo_data` the company is filled with sample
+	records; if that fails the company is still created and the error is returned."""
 	from spend.api import check_app_permission
 
 	check_app_permission()
@@ -181,7 +182,23 @@ def setup_company(company_name: str, abbr: str, currency: str) -> dict:
 	).insert()
 	frappe.db.set_single_value("System Settings", "default_app", "spend")
 	frappe.defaults.set_user_default("company", company.name)
-	return {"name": company.name}
+	result = {"name": company.name}
+	if frappe.utils.cint(demo_data):
+		result["demo_error"] = load_demo_data(company.name)
+	return result
+
+
+def load_demo_data(company: str) -> str | None:
+	from spend.spend.demo import create_demo_data
+
+	frappe.db.savepoint("demo_data")
+	try:
+		create_demo_data(company)
+	except Exception as e:
+		frappe.db.rollback(save_point="demo_data")
+		frappe.clear_messages()
+		frappe.log_error(title=_("Demo data could not be created for {0}").format(company))
+		return str(e) or e.__class__.__name__
 
 
 def create_roles():

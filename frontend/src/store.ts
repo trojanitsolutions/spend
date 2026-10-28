@@ -7,6 +7,7 @@ interface Company {
 	abbr: string
 	default_currency: string
 	is_training: 0 | 1
+	has_demo_data: boolean
 }
 
 interface FiscalYear {
@@ -49,6 +50,9 @@ export const session = reactive({
 export const inTrainingCompany = computed(
 	() => !!session.companies.find((c) => c.name === session.company)?.is_training,
 )
+
+/** The current company holds demo data that can be cleared in Settings. */
+export const hasDemoData = computed(() => !!session.companies.find((c) => c.name === session.company)?.has_demo_data)
 
 export const currency = computed(
 	() => session.companies.find((c) => c.name === session.company)?.default_currency || "",

@@ -81,6 +81,11 @@
 				<span class="flex-1">Training company: entries here are for practice and never reach your books.</span>
 				<button v-if="!state.run" type="button" class="font-medium underline" @click="leaveTraining">Leave</button>
 			</div>
+			<div v-else-if="hasDemoData" class="flex flex-wrap items-center gap-2 border-b border-outline-blue-2 bg-surface-blue-1 px-4 py-1.5 text-sm text-ink-blue-8 sm:px-6">
+				<span class="lucide-flask-conical size-4" aria-hidden="true" />
+				<span class="flex-1">This company has demo data to explore Spend. Clear it when you are ready to add your own.</span>
+				<RouterLink v-if="canRead('Spend Settings')" to="/settings" class="font-medium underline">Clear demo data</RouterLink>
+			</div>
 			<main class="min-w-0 flex-1 overflow-y-auto">
 				<slot />
 			</main>
@@ -95,7 +100,7 @@ import { useRoute } from "vue-router"
 import { Button } from "frappe-ui"
 import NotificationBell from "@/components/NotificationBell.vue"
 import { counts, refreshCounts } from "@/notifications"
-import { canRead, canRunReport, deskAccess, inTrainingCompany, logout, session, setCompany } from "@/store"
+import { canRead, canRunReport, deskAccess, hasDemoData, inTrainingCompany, logout, session, setCompany } from "@/store"
 import TrainingLayer from "@/training/TrainingLayer.vue"
 import { state } from "@/training/run"
 
