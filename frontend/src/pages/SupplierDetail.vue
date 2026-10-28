@@ -4,46 +4,47 @@
 		<PageHeader :title="supplier.supplier_name" :subtitle="supplier.tax_id ? `Tax ID ${supplier.tax_id}` : undefined" :back="{ to: '/suppliers', label: 'Suppliers' }">
 			<template #badge><Badge v-if="supplier.disabled" theme="gray" label="Disabled" /></template>
 			<template #actions>
-				<Button label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
+				<Button v-if="deskAccess" label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
 				<Button v-if="can('Supplier Payment', 'create') && detail.outstanding > 0" icon-left="lucide-banknote" label="Pay" @click="$router.push({ path: '/payments/new', query: { supplier: name } })" />
 				<Button v-if="can('Purchase Invoice', 'create') && !supplier.disabled" variant="solid" icon-left="lucide-plus" label="New Bill" @click="$router.push({ path: '/bills/new', query: { supplier: name } })" />
 			</template>
 		</PageHeader>
 
-		<div class="space-y-6 p-4 sm:p-6">
-			<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-				<StatCard label="Invoiced" :value="fmt(detail.invoiced)" :hint="`${submittedBills} bills`" />
-				<StatCard label="Outstanding" :value="fmt(detail.outstanding)" :tone="detail.outstanding > 0 ? 'amber' : 'green'" />
-				<StatCard label="Overdue" :value="fmt(detail.overdue)" :tone="detail.overdue > 0 ? 'red' : undefined" />
-			</div>
+		<DocLayout doctype="Supplier" :name="name" :version="supplier.modified">
+			<div class="space-y-6">
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+					<StatCard label="Invoiced" :value="fmt(detail.invoiced)" :hint="`${submittedBills} bills`" />
+					<StatCard label="Outstanding" :value="fmt(detail.outstanding)" :tone="detail.outstanding > 0 ? 'amber' : 'green'" />
+					<StatCard label="Overdue" :value="fmt(detail.overdue)" :tone="detail.overdue > 0 ? 'red' : undefined" />
+				</div>
 
-			<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-				<section class="rounded-xl border border-outline-gray-1 p-4">
-					<h2 class="mb-3 text-base font-semibold">Details</h2>
-					<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-						<template v-for="[label, value] in details" :key="label">
-							<dt class="text-ink-gray-5">{{ label }}</dt>
-							<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">{{ value || "—" }}</dd>
-						</template>
-					</dl>
-				</section>
+				<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+					<section class="rounded-xl border border-outline-gray-1 p-4">
+						<h2 class="mb-3 text-base font-semibold">Details</h2>
+						<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+							<template v-for="[label, value] in details" :key="label">
+								<dt class="text-ink-gray-5">{{ label }}</dt>
+								<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">{{ value || "—" }}</dd>
+							</template>
+						</dl>
+					</section>
 
-				<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
-					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills</h2>
-					<DataTable class="mt-2" :columns="billColumns" :rows="detail.invoices" clickable empty-text="No bills yet" @row-click="(r) => $router.push(`/bills/${r.name}`)">
-						<template #status="{ value }"><StatusBadge :status="value" /></template>
+					<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
+						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills</h2>
+						<DataTable class="mt-2" :columns="billColumns" :rows="detail.invoices" clickable empty-text="No bills yet" @row-click="(r) => $router.push(`/bills/${r.name}`)">
+							<template #status="{ value }"><StatusBadge :status="value" /></template>
+						</DataTable>
+					</section>
+				</div>
+
+				<section class="rounded-xl border border-outline-gray-1">
+					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
+					<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments yet" @row-click="(r) => $router.push(`/payments/${r.name}`)">
+						<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
 					</DataTable>
 				</section>
 			</div>
-
-			<section class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
-				<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" empty-text="No payments yet">
-					<template #name="{ value }"><a :href="`/app/supplier-payment/${value}`" class="hover:underline">{{ value }}</a></template>
-					<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
-				</DataTable>
-			</section>
-		</div>
+		</DocLayout>
 	</div>
 </template>
 
@@ -51,12 +52,13 @@
 import { computed, onMounted, ref, watch } from "vue"
 import { Badge, Button, LoadingText } from "frappe-ui"
 import DataTable, { type Column } from "@/components/DataTable.vue"
+import DocLayout from "@/components/DocLayout.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import StatCard from "@/components/StatCard.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
 import { api } from "@/api"
 import { date, docstatusLabel, money } from "@/format"
-import { can, currency, session } from "@/store"
+import { can, currency, deskAccess, session } from "@/store"
 
 const props = defineProps<{ name: string }>()
 

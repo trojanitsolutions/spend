@@ -224,6 +224,7 @@ def make_depreciation_entry(asset, schedule, row) -> str:
 				{
 					"account": asset.depreciation_expense_account,
 					"cost_center": cost_center,
+					"project": asset.get_project_on(row.schedule_date),
 					"debit": row.depreciation_amount,
 					"reference_type": "Asset",
 					"reference_name": asset.name,

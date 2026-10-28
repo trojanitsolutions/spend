@@ -2,7 +2,7 @@
 	<div>
 		<PageHeader title="Bills" subtitle="Supplier invoices, posted to expense and payable accounts">
 			<template #actions>
-				<Button v-if="can('Purchase Invoice', 'create')" variant="solid" icon-left="lucide-plus" label="New Bill" @click="$router.push('/bills/new')" />
+				<Button v-if="can('Purchase Invoice', 'create')" v-tour="'bills.new'" variant="solid" icon-left="lucide-plus" label="New Bill" @click="$router.push('/bills/new')" />
 			</template>
 		</PageHeader>
 

@@ -209,12 +209,18 @@ class InactiveProjectError(frappe.ValidationError):
 	pass
 
 
-def validate_project(project: str, company: str, label: str | None = None):
-	"""Project must belong to the company and still be open for postings."""
+def validate_project(project: str, company: str, label: str | None = None, allow_closed: bool = False):
+	"""Project must belong to the company and still be open for postings.
+
+	`allow_closed` skips the status and approval checks, for system postings such as depreciation
+	that keep running after the project is completed.
+	"""
 	if not project:
 		return
 	label = label or _("Project")
 	validate_company_link("Project", project, company, label)
+	if allow_closed:
+		return
 	status = frappe.db.get_value("Project", project, "status")
 	if status != "Open":
 		frappe.throw(
@@ -231,3 +237,108 @@ def validate_project(project: str, company: str, label: str | None = None):
 			),
 			InactiveProjectError,
 		)
+
+
+class BudgetAccountError(frappe.ValidationError):
+	pass
+
+
+class ProjectAccountError(BudgetAccountError):
+	pass
+
+
+def get_project_accounts(project: str) -> list[str]:
+	"""The expense accounts a project books to: its own account rows, else the accounts of its Budget."""
+	accounts = frappe.get_all(
+		"Project Budget Account",
+		filters={"parenttype": "Project", "parent": project},
+		pluck="account",
+		order_by="idx",
+	)
+	if accounts:
+		return accounts
+	budget = frappe.db.get_value("Project", project, "budget")
+	return frappe.get_all(
+		"Budget Account", filters={"parenttype": "Budget", "parent": budget}, pluck="account", order_by="idx"
+	)
+
+
+def get_budget_accounts(company: str, cost_center: str, posting_date) -> list[str]:
+	"""The accounts of the submitted Budgets on a cost center, or on one above it, for the year of `posting_date`."""
+	fiscal_year = get_fiscal_year(posting_date, throw=False)
+	if not (cost_center and fiscal_year):
+		return []
+	budget = frappe.qb.DocType("Budget")
+	budget_account = frappe.qb.DocType("Budget Account")
+	return (
+		frappe.qb.from_(budget)
+		.join(budget_account)
+		.on(budget_account.parent == budget.name)
+		.select(budget_account.account)
+		.distinct()
+		.where(
+			(budget.docstatus == 1)
+			& (budget.company == company)
+			& (budget.fiscal_year == fiscal_year)
+			& (budget.cost_center.isin(get_ancestors_with_self("Cost Center", cost_center)))
+		)
+		.orderby(budget_account.account)
+		.run(pluck=True)
+	)
+
+
+def get_allowed_accounts(company: str, project: str | None, cost_center: str | None, posting_date) -> list[str]:
+	"""The expense accounts a line books to: those of its project, else those budgeted on its cost center."""
+	if project:
+		return get_project_accounts(project)
+	return get_budget_accounts(company, cost_center, posting_date)
+
+
+def is_project_account(account: str, accounts: list[str]) -> bool:
+	return any(account in get_subtree("Account", a) for a in accounts)
+
+
+def validate_expense_account(
+	account: str,
+	amount: float,
+	project: str | None,
+	cost_center: str | None,
+	company: str,
+	posting_date,
+	label: str,
+):
+	"""An expense is debited only to an account with budget: on its project, else on its cost center."""
+	if not account or flt(amount) <= 0 or not (project or cost_center):
+		return
+	if frappe.db.get_value("Account", account, "root_type") != "Expense":
+		return
+	accounts = get_allowed_accounts(company, project, cost_center, posting_date)
+	if is_project_account(account, accounts):
+		return
+	if project:
+		frappe.throw(
+			_("{0}: Account {1} has no budget on Project {2}. Use one of: {3}").format(
+				label,
+				frappe.bold(account),
+				frappe.bold(frappe.db.get_value("Project", project, "project_name")),
+				", ".join(accounts) or _("none"),
+			),
+			ProjectAccountError,
+			title=_("Account Not Budgeted"),
+		)
+	fiscal_year = get_fiscal_year(posting_date, throw=False)
+	if not accounts:
+		frappe.throw(
+			_("{0}: Cost Center {1} has no submitted Budget for {2}. Expenses are booked only to budgeted accounts.").format(
+				label, frappe.bold(cost_center), fiscal_year
+			),
+			BudgetAccountError,
+			title=_("Account Not Budgeted"),
+		)
+	frappe.throw(
+		_("{0}: Account {1} has no budget on Cost Center {2} for {3}. Use one of: {4}").format(
+			label, frappe.bold(account), frappe.bold(cost_center), fiscal_year, ", ".join(accounts)
+		),
+		BudgetAccountError,
+		title=_("Account Not Budgeted"),
+	)

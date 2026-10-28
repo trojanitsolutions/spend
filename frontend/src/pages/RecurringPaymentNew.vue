@@ -24,7 +24,7 @@
 			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Payment</legend>
 				<FormControl v-model="doc.title" label="Title" required placeholder="e.g. Office rent" />
-				<FormControl v-model="doc.payee" label="Paid to" placeholder="Landlord, provider… (optional)" />
+				<FormControl v-model="doc.payee" label="Payee" placeholder="Landlord, provider… (optional)" />
 				<LinkField v-model="doc.project" doctype="Project" label="Project" description="Optional. The payment then takes from the project's share." :filters="{ company: session.company, status: 'Open' }" />
 				<CategoryFields
 					v-model:category="doc.expense_category"
@@ -46,7 +46,8 @@
 					<LinkField
 						v-model="doc.expense_account"
 						doctype="Account"
-						label="Expense account"
+						label="Paid from"
+						description="Expense account (debit)"
 						required
 						:disabled="!room"
 						:filters="{ company: session.company, name: ['in', room ? room.accounts.map((a) => a.account) : []] }"
@@ -57,9 +58,9 @@
 				<LinkField
 					v-model="doc.paid_from"
 					doctype="Account"
-					label="Paid from"
+					label="Paid to"
 					required
-					description="Cash or bank account"
+					description="Cash or bank account (credit)"
 					:filters="{ company: session.company, is_group: 0, disabled: 0, account_type: ['in', ['Cash', 'Bank']] }"
 				/>
 			</fieldset>
@@ -162,7 +163,7 @@ async function loadPreview() {
 		return
 	}
 	preview.value = await api(
-		"spend.spend.doctype.recurring_payment.recurring_payment.preview_schedule",
+		"spend.purchasing.doctype.recurring_payment.recurring_payment.preview_schedule",
 		{ from_date: doc.from_date, to_date: doc.to_date, frequency: doc.frequency, total_amount: doc.total_amount },
 		{ silent: true },
 	).catch(() => [])

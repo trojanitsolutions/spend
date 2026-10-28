@@ -33,7 +33,7 @@ async function complete() {
 	}
 	saving.value = true
 	try {
-		await api("spend.spend.doctype.task.task.set_multiple_status", { names: props.tasks, status: "Completed", completed_on: completedOn.value })
+		await api("spend.projects.doctype.task.task.set_multiple_status", { names: props.tasks, status: "Completed", completed_on: completedOn.value })
 		toast.success(props.tasks.length > 1 ? "Tasks completed" : "Task completed")
 		emit("done")
 		open.value = false

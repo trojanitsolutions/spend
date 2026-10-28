@@ -8,12 +8,14 @@ import frappe
 from frappe import _
 from frappe.query_builder.functions import Coalesce, Count, Sum
 from frappe.utils import add_months, flt, get_first_day, get_last_day, getdate, nowdate
+from frappe.utils.modules import get_blocked_modules
 
 from spend.spend.accounting import GL_PRECISION, get_fiscal_year
 from spend.spend.approval import get_active_approvals
-from spend.spend.doctype.project.project import get_bill_totals, get_spend_by_project, make_project_row
-from spend.spend.doctype.recurring_payment.recurring_payment import get_recurring_rows, get_upcoming_payments
+from spend.projects.doctype.project.project import get_bill_totals, get_spend_by_project, make_project_row
+from spend.purchasing.doctype.recurring_payment.recurring_payment import get_recurring_rows, get_upcoming_payments
 from spend.spend.setup import ROLES
+from spend.training.access import is_trainer
 
 APP_ROLES = {*ROLES, "System Manager"}
 
@@ -30,16 +32,17 @@ def check_app_permission():
 @frappe.whitelist()
 def get_boot() -> dict:
 	check_app_permission()
-	companies = frappe.get_list(
-		"Company", fields=["name", "abbr", "default_currency"], order_by="company_name"
+	companies = get_reference_list(
+		"Company", fields=["name", "abbr", "default_currency", "is_training"], order_by="company_name"
 	)
-	fiscal_years = frappe.get_list(
+	fiscal_years = get_reference_list(
 		"Fiscal Year",
 		filters={"disabled": 0},
 		fields=["name", "start_date", "end_date"],
 		order_by="start_date desc",
 	)
 	user_company = frappe.defaults.get_user_default("Company")
+	blocked = set(get_blocked_modules())
 	return {
 		"user": frappe.session.user,
 		"full_name": frappe.utils.get_fullname(frappe.session.user),
@@ -51,6 +54,7 @@ def get_boot() -> dict:
 		"roles": sorted(APP_ROLES & set(frappe.get_roles())),
 		"permissions": {
 			doctype: {
+				"read": can_read(doctype, blocked),
 				"create": frappe.has_permission(doctype, "create"),
 				"submit": frappe.has_permission(doctype, "submit"),
 				"write": frappe.has_permission(doctype, "write"),
@@ -64,6 +68,7 @@ def get_boot() -> dict:
 				"Company",
 				"Account",
 				"Cost Center",
+				"GL Entry",
 				"Fiscal Year",
 				"Supplier",
 				"Purchase Invoice",
@@ -78,37 +83,75 @@ def get_boot() -> dict:
 				"UOM",
 			)
 		},
+		"reports": get_allowed_reports(blocked),
+		"can_setup": bool(frappe.has_permission("Company", "create")),
+		"is_trainer": is_trainer(),
+		"default_currency": frappe.db.get_single_value("System Settings", "currency") or "INR",
 	}
+
+
+def can_read(doctype: str, blocked: set[str] | None = None) -> bool:
+	"""Read permission on the doctype, and its module not blocked for the user."""
+	if blocked is None:
+		blocked = set(get_blocked_modules())
+	return frappe.has_permission(doctype, "read") and frappe.get_meta(doctype).module not in blocked
+
+
+def get_reference_list(doctype: str, **kwargs) -> list:
+	"""Companies and fiscal years the app shell needs. A role that cannot read the doctype, such as
+	General Manager, still gets the plain list, since every page is scoped by company."""
+	return frappe.get_list(doctype, ignore_permissions=not frappe.has_permission(doctype, "read"), **kwargs)
+
+
+def get_allowed_reports(blocked: set[str]) -> list[str]:
+	"""Spend reports this user may run: enabled, permitted to one of their roles, and not in a
+	module blocked for them."""
+	reports = frappe.get_all(
+		"Report",
+		filters={"module": ("in", frappe.get_module_list("spend")), "disabled": 0},
+		fields=["name", "module"],
+	)
+	return sorted(
+		r.name for r in reports if r.module not in blocked and frappe.get_cached_doc("Report", r.name).is_permitted()
+	)
 
 
 @frappe.whitelist()
 def get_dashboard(company: str) -> dict:
 	check_app_permission()
-	frappe.has_permission("Company", "read", company, throw=True)
+	if frappe.has_permission("Company", "read"):
+		frappe.has_permission("Company", "read", company, throw=True)
+	elif not frappe.db.exists("Company", company):
+		frappe.throw(_("Company {0} does not exist").format(company), frappe.DoesNotExistError)
 	today = getdate(nowdate())
 	fiscal_year = get_fiscal_year(today, throw=False)
 	currency = frappe.get_cached_value("Company", company, "default_currency")
+	blocked = set(get_blocked_modules())
 
+	def allowed(doctype):
+		return can_read(doctype, blocked)
+
+	# a section is None when the user cannot read what it is built from
 	return {
 		"currency": currency,
 		"fiscal_year": fiscal_year,
-		"assets": get_asset_kpis(company),
-		"depreciation_due": get_depreciation_due(company, today),
-		"budget": get_budget_kpis(company, fiscal_year),
-		"spending_trend": get_spending_trend(company, today),
-		"top_cost_centers": get_top_cost_centers(company, fiscal_year),
-		"payables": get_payables(company, today),
-		"projects": get_project_kpis(company),
-		"upcoming_payments": get_upcoming_payments(company)
-		if frappe.has_permission("Recurring Payment", "read")
-		else [],
+		"assets": get_asset_kpis(company) if allowed("Asset") else None,
+		"depreciation_due": get_depreciation_due(company, today) if allowed("Asset") else None,
+		"budget": get_budget_kpis(company, fiscal_year) if allowed("Budget") else None,
+		"spending_trend": get_spending_trend(company, today) if allowed("GL Entry") else None,
+		"top_cost_centers": get_top_cost_centers(company, fiscal_year) if allowed("Cost Center") else None,
+		"payables": get_payables(company, today) if allowed("Purchase Invoice") else None,
+		"projects": get_project_kpis(company) if allowed("Project") else None,
+		"upcoming_payments": get_upcoming_payments(company) if allowed("Recurring Payment") else [],
 		"recent_entries": frappe.get_list(
 			"Journal Entry",
 			filters={"company": company, "docstatus": 1},
 			fields=["name", "title", "voucher_type", "posting_date", "total_debit"],
 			order_by="posting_date desc, creation desc",
 			limit=6,
-		),
+		)
+		if allowed("Journal Entry")
+		else None,
 	}
 
 
@@ -153,7 +196,7 @@ def get_depreciation_due(company, today):
 def get_budget_kpis(company, fiscal_year):
 	if not fiscal_year:
 		return {"allocated": 0, "actual": 0, "utilization": 0, "budgets": []}
-	from spend.spend.report.budget_utilization.budget_utilization import get_data
+	from spend.budgeting.report.budget_utilization.budget_utilization import get_data
 
 	budgets = get_data(frappe._dict(company=company, fiscal_year=fiscal_year))
 	allocated = sum(b["allocated"] for b in budgets)
@@ -199,7 +242,7 @@ def get_spending_trend(company, today):
 def get_top_cost_centers(company, fiscal_year):
 	if not fiscal_year:
 		return []
-	from spend.spend.report.cost_center_wise_spending.cost_center_wise_spending import get_data
+	from spend.accounts.report.cost_center_wise_spending.cost_center_wise_spending import get_data
 
 	start, end = frappe.db.get_value("Fiscal Year", fiscal_year, ["start_date", "end_date"])
 	leaves = [r for r in get_data(company, start, end) if not r["is_group"] and r["spending"]]
@@ -443,13 +486,42 @@ def get_asset_detail(asset: str) -> dict:
 		fields=["name", "voucher_type", "posting_date", "total_debit", "docstatus"],
 		order_by="posting_date desc, creation desc",
 	)
+	running_costs = get_running_costs(asset)
 	return {
 		"doc": doc.as_dict(),
 		"schedule": schedule,
 		"entries": entries,
+		"running_costs": running_costs,
+		"running_cost_total": flt(sum(r.amount for r in running_costs), GL_PRECISION),
 		"can_submit": doc.has_permission("submit"),
+		"can_write": doc.has_permission("write"),
 	}
 
+
+
+def get_running_costs(asset: str) -> list[dict]:
+	"""Expenses booked for an asset, such as fuel for a car: one row per entry and account, newest first."""
+	gle = frappe.qb.DocType("GL Entry")
+	rows = (
+		frappe.qb.from_(gle)
+		.select(
+			gle.voucher_no.as_("name"),
+			gle.posting_date,
+			gle.account,
+			(Sum(gle.debit) - Sum(gle.credit)).as_("amount"),
+		)
+		.where((gle.asset == asset) & (gle.is_cancelled == 0) & (gle.voucher_type == "Journal Entry"))
+		.groupby(gle.voucher_no, gle.posting_date, gle.account)
+		.orderby(gle.posting_date, order=frappe.qb.desc)
+		.orderby(gle.voucher_no, order=frappe.qb.desc)
+		.run(as_dict=True)
+	)
+	if not rows:
+		return []
+	readable = set(
+		frappe.get_list("Journal Entry", filters={"name": ("in", {r.name for r in rows})}, pluck="name")
+	)
+	return [r for r in rows if r.name in readable]
 
 SETTINGS_FIELDS = (
 	"approve_purchase_invoice",

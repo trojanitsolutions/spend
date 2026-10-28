@@ -1,19 +1,19 @@
 <template>
 	<div>
-		<PageHeader title="Approvals" subtitle="Documents waiting for your approval. An Accounts Manager approves first, then the General Manager." />
+		<PageHeader title="Approvals" subtitle="Documents waiting for your approval. The General Manager approves every document." />
 
 		<div class="p-4 sm:p-6">
 			<EmptyState
 				v-if="!loading && !rows.length"
 				icon="lucide-circle-check"
 				title="Nothing to approve"
-				:message="canApprove ? 'Documents sent for approval appear here.' : 'Only Accounts Managers and General Managers approve documents.'"
+				:message="canApprove ? 'Documents sent for approval appear here.' : 'Only the General Manager approves documents.'"
 			/>
 			<DataTable v-else :columns="columns" :rows="rows" :loading="loading" clickable row-key="name" @row-click="open">
 				<template #title="{ row }">
 					<div class="max-w-72 truncate font-medium text-ink-gray-9">{{ row.title }}</div>
 					<div class="text-sm text-ink-gray-5">{{ row.doctype }} · {{ row.name }}</div>
-				<div v-if="row.note" class="max-w-96 truncate text-sm text-ink-blue-4" :title="row.note">{{ row.note }}</div>
+				<div v-if="row.note" class="max-w-96 truncate text-sm text-ink-blue-8" :title="row.note">{{ row.note }}</div>
 				</template>
 				<template #state="{ value }"><StatusBadge :status="value" /></template>
 				<template #actions="{ row }">
@@ -51,7 +51,7 @@ const busy = ref("")
 const rejecting = ref(false)
 const reason = ref("")
 const target = ref<any>(null)
-const canApprove = computed(() => hasRole("Accounts Manager") || hasRole("General Manager"))
+const canApprove = computed(() => hasRole("General Manager"))
 
 const columns: Column[] = [
 	{ key: "title", label: "Document" },

@@ -11,7 +11,7 @@
 			<fieldset class="space-y-3 rounded-xl border border-outline-gray-1 p-4" :disabled="!settings.can_write">
 				<legend class="px-1 text-base font-semibold">Approvals</legend>
 				<p class="text-sm text-ink-gray-6">
-					Checked documents need an Accounts Manager and then the General Manager to approve them before they are posted.
+					Checked documents need the General Manager's approval before they are posted.
 					A project can only be used once its budget is approved.
 				</p>
 				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

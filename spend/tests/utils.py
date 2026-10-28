@@ -201,6 +201,40 @@ def get_project_budget(company=TEST_COMPANY, year=2025) -> str:
 	return budget.name
 
 
+def ensure_open_budget(year: int, company=TEST_COMPANY) -> str:
+	"""An `Ignore` Budget on the company's root cost center with every expense account.
+
+	Expenses are booked only to budgeted accounts; this lets tests book anywhere. A test of
+	that rule cancels it inside its savepoint with `close_open_budget`.
+	"""
+	fiscal_year = ensure_fiscal_year(year)
+	cost_center = frappe.db.get_value("Cost Center", {"company": company, "parent_cost_center": ("is", "not set")})
+	filters = {"company": company, "cost_center": cost_center, "fiscal_year": fiscal_year, "docstatus": 1}
+	if existing := frappe.db.get_value("Budget", filters):
+		return existing
+	accounts = frappe.get_all(
+		"Account", filters={"company": company, "root_type": "Expense", "is_group": 0}, pluck="name"
+	)
+	budget = frappe.get_doc(
+		{
+			"doctype": "Budget",
+			"company": company,
+			"fiscal_year": fiscal_year,
+			"cost_center": cost_center,
+			"action_if_exceeded": "Ignore",
+			"accounts": [{"account": acc, "budget_amount": 10**9} for acc in accounts],
+		}
+	)
+	budget.flags.ignore_permissions = True
+	budget.insert()
+	budget.submit()
+	return budget.name
+
+
+def close_open_budget(year: int, company=TEST_COMPANY):
+	frappe.db.set_value("Budget", ensure_open_budget(year, company), "docstatus", 2)
+
+
 def get_recurring_cost_center(company=TEST_COMPANY) -> str:
 	"""A cost center under the test project Budgets, for recurring payments without a project."""
 	abbr = frappe.db.get_value("Company", company, "abbr")
@@ -277,6 +311,8 @@ def setup_test_data():
 		ensure_fiscal_year(year)
 	set_approvals(False)
 	company = make_company()
+	for year in (2024, 2025, 2026, 2027, 2028, 2029, 2030):
+		ensure_open_budget(year)
 	get_project_budget()
 	get_recurring_cost_center()
 	return company

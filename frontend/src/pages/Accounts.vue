@@ -3,7 +3,7 @@
 		<PageHeader title="Expense Accounts" subtitle="Numbered expense accounts and what has been spent on each">
 			<template #actions>
 				<div class="w-40"><FormControl v-model="asOn" type="date" aria-label="As on date" /></div>
-				<Button icon-left="lucide-external-link" label="Full chart in Desk" @click="openDesk" />
+				<Button v-if="deskAccess" icon-left="lucide-external-link" label="Full chart in Desk" @click="openDesk" />
 				<Button v-if="can('Account', 'create')" variant="solid" icon-left="lucide-plus" label="New Account" @click="openNew" />
 			</template>
 		</PageHeader>
@@ -50,7 +50,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import TreeTable from "@/components/TreeTable.vue"
 import { insertDoc, runReport } from "@/api"
 import { money, today } from "@/format"
-import { can, currency, session } from "@/store"
+import { can, currency, deskAccess, session } from "@/store"
 
 const rows = ref<any[]>([])
 const loading = ref(false)

@@ -5,72 +5,74 @@
 			<template v-if="doc" #badge><Badge :theme="doc.disabled ? 'gray' : 'green'" :label="doc.disabled ? 'Disabled' : 'Enabled'" /></template>
 			<template #actions>
 				<template v-if="doc">
-					<Button label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
+					<Button v-if="deskAccess" label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
 					<Button v-if="can('Item', 'delete')" theme="red" label="Delete" @click="remove" />
 				</template>
 				<Button v-if="canWrite" variant="solid" :label="doc ? 'Save' : 'Create Item'" :loading="saving" @click="save" />
 			</template>
 		</PageHeader>
 
-		<form class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6" @submit.prevent="save">
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
-				<legend class="px-1 text-base font-semibold">Item</legend>
-				<FormControl v-model="draft.item_code" label="Item code" required placeholder="e.g. CEMENT-OPC53" :disabled="!!doc" />
-				<FormControl v-model="draft.item_name" label="Item name" placeholder="Same as the code when empty" />
-				<div class="flex items-end gap-1">
-					<LinkField v-model="draft.item_group" class="min-w-0 flex-1" doctype="Item Group" label="Item group" required />
-					<Button variant="ghost" icon="lucide-folder-tree" aria-label="Item groups" title="Item groups" @click="$router.push('/item-groups')" />
-				</div>
-				<div class="flex items-end gap-1">
-					<LinkField v-model="draft.stock_uom" class="min-w-0 flex-1" doctype="UOM" label="Default unit of measure" required :filters="{ enabled: 1 }" />
-					<Button v-if="can('UOM', 'create')" variant="ghost" icon="lucide-plus" aria-label="New unit" title="New unit" @click="uomFor = (u) => (draft.stock_uom = u)" />
-				</div>
-				<div class="flex flex-col gap-2 sm:col-span-2 sm:flex-row sm:gap-6">
-					<FormControl v-model="draft.disabled" type="checkbox" label="Disabled" />
-				</div>
-			</fieldset>
-
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
-				<legend class="px-1 text-base font-semibold">Purchasing</legend>
-				<FormControl v-model="draft.standard_rate" type="number" min="0" step="0.01" :label="`Standard buying rate (per ${draft.stock_uom || 'unit'})`" description="Used until a supplier bills this item" />
-				<FormControl :model-value="doc?.last_purchase_rate ? fmt(doc.last_purchase_rate) : '—'" label="Last purchase rate" description="From the last submitted bill" disabled />
-				<FormControl v-model="draft.is_fixed_asset" type="checkbox" label="Is fixed asset" :disabled="lockedAsset" :description="lockedAsset ? 'Submitted bills use this item' : 'Bills book it to an asset account, not an expense'" />
-				<FormControl v-if="draft.is_fixed_asset" v-model="draft.auto_create_assets" type="checkbox" label="Auto create assets on purchase" description="One draft asset per unit when a bill is submitted" />
-			</fieldset>
-
-			<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
-				<legend class="px-1 text-base font-semibold">Units of measure</legend>
-				<LinkField
-					v-model="draft.purchase_uom"
-					doctype="UOM"
-					label="Default purchase unit of measure"
-					:placeholder="draft.stock_uom || 'Same as the default unit'"
-					description="Filled in on bills. It must be in the table below."
-					:filters="{ enabled: 1 }"
-				/>
-				<div>
-					<div class="mb-1.5 grid grid-cols-[1fr_10rem_auto] gap-2 text-xs text-ink-gray-5">
-						<span>UOM</span>
-						<span>{{ draft.stock_uom || "Default units" }} in one</span>
-						<span class="w-7" />
+		<DocLayout doctype="Item" :name="doc?.name" :version="doc?.modified">
+			<form :class="doc ? 'space-y-6' : 'mx-auto max-w-3xl space-y-6'" @submit.prevent="save">
+				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+					<legend class="px-1 text-base font-semibold">Item</legend>
+					<FormControl v-model="draft.item_code" label="Item code" required placeholder="e.g. CEMENT-OPC53" :disabled="!!doc" />
+					<FormControl v-model="draft.item_name" label="Item name" placeholder="Same as the code when empty" />
+					<div class="flex items-end gap-1">
+						<LinkField v-model="draft.item_group" class="min-w-0 flex-1" doctype="Item Group" label="Item group" required />
+						<Button variant="ghost" icon="lucide-folder-tree" aria-label="Item groups" title="Item groups" @click="$router.push('/item-groups')" />
 					</div>
-					<div v-for="(row, i) in draft.uoms" :key="row.key" class="mb-2 grid grid-cols-[1fr_10rem_auto] items-center gap-2">
-						<div class="flex items-center gap-1">
-							<LinkField v-model="row.uom" class="min-w-0 flex-1" doctype="UOM" placeholder="e.g. Box" :filters="{ enabled: 1 }" />
-							<Button v-if="can('UOM', 'create')" variant="ghost" icon="lucide-plus" aria-label="New unit" title="New unit" @click="uomFor = (u) => (row.uom = u)" />
+					<div class="flex items-end gap-1">
+						<LinkField v-model="draft.stock_uom" class="min-w-0 flex-1" doctype="UOM" label="Default unit of measure" required :filters="{ enabled: 1 }" />
+						<Button v-if="can('UOM', 'create')" variant="ghost" icon="lucide-plus" aria-label="New unit" title="New unit" @click="uomFor = (u) => (draft.stock_uom = u)" />
+					</div>
+					<div class="flex flex-col gap-2 sm:col-span-2 sm:flex-row sm:gap-6">
+						<FormControl v-model="draft.disabled" type="checkbox" label="Disabled" />
+					</div>
+				</fieldset>
+
+				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+					<legend class="px-1 text-base font-semibold">Purchasing</legend>
+					<FormControl v-model="draft.standard_rate" type="number" min="0" step="0.01" :label="`Standard buying rate (per ${draft.stock_uom || 'unit'})`" description="Used until a supplier bills this item" />
+					<FormControl :model-value="doc?.last_purchase_rate ? fmt(doc.last_purchase_rate) : '—'" label="Last purchase rate" description="From the last submitted bill" disabled />
+					<FormControl v-model="draft.is_fixed_asset" type="checkbox" label="Is fixed asset" :disabled="lockedAsset" :description="lockedAsset ? 'Submitted bills use this item' : 'Bills book it to an asset account, not an expense'" />
+					<FormControl v-if="draft.is_fixed_asset" v-model="draft.auto_create_assets" type="checkbox" label="Auto create assets on purchase" description="One draft asset per unit when a bill is submitted" />
+				</fieldset>
+
+				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
+					<legend class="px-1 text-base font-semibold">Units of measure</legend>
+					<LinkField
+						v-model="draft.purchase_uom"
+						doctype="UOM"
+						label="Default purchase unit of measure"
+						:placeholder="draft.stock_uom || 'Same as the default unit'"
+						description="Filled in on bills. It must be in the table below."
+						:filters="{ enabled: 1 }"
+					/>
+					<div>
+						<div class="mb-1.5 grid grid-cols-[1fr_10rem_auto] gap-2 text-xs text-ink-gray-5">
+							<span>UOM</span>
+							<span>{{ draft.stock_uom || "Default units" }} in one</span>
+							<span class="w-7" />
 						</div>
-						<FormControl v-model="row.conversion_factor" type="number" min="0" step="any" :disabled="row.uom === draft.stock_uom" />
-						<Button variant="ghost" icon="lucide-trash-2" :aria-label="`Remove UOM ${i + 1}`" :disabled="row.uom === draft.stock_uom" @click="draft.uoms.splice(i, 1)" />
+						<div v-for="(row, i) in draft.uoms" :key="row.key" class="mb-2 grid grid-cols-[1fr_10rem_auto] items-center gap-2">
+							<div class="flex items-center gap-1">
+								<LinkField v-model="row.uom" class="min-w-0 flex-1" doctype="UOM" placeholder="e.g. Box" :filters="{ enabled: 1 }" />
+								<Button v-if="can('UOM', 'create')" variant="ghost" icon="lucide-plus" aria-label="New unit" title="New unit" @click="uomFor = (u) => (row.uom = u)" />
+							</div>
+							<FormControl v-model="row.conversion_factor" type="number" min="0" step="any" :disabled="row.uom === draft.stock_uom" />
+							<Button variant="ghost" icon="lucide-trash-2" :aria-label="`Remove UOM ${i + 1}`" :disabled="row.uom === draft.stock_uom" @click="draft.uoms.splice(i, 1)" />
+						</div>
+						<Button icon-left="lucide-plus" label="Add UOM" @click="draft.uoms.push(uomRow())" />
 					</div>
-					<Button icon-left="lucide-plus" label="Add UOM" @click="draft.uoms.push(uomRow())" />
-				</div>
-			</fieldset>
+				</fieldset>
 
-			<fieldset class="rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
-				<legend class="px-1 text-base font-semibold">Description</legend>
-				<FormControl v-model="draft.description" type="textarea" :rows="4" placeholder="Filled in on bill lines" />
-			</fieldset>
-		</form>
+				<fieldset class="rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
+					<legend class="px-1 text-base font-semibold">Description</legend>
+					<FormControl v-model="draft.description" type="textarea" :rows="4" placeholder="Filled in on bill lines" />
+				</fieldset>
+			</form>
+		</DocLayout>
 		<UomDialog :open="!!uomFor" @update:open="(v) => !v && (uomFor = null)" @created="(u) => uomFor?.(u)" />
 	</div>
 </template>
@@ -79,12 +81,13 @@
 import { computed, onMounted, reactive, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { Badge, Button, FormControl, LoadingText, dialog, toast } from "frappe-ui"
+import DocLayout from "@/components/DocLayout.vue"
 import LinkField from "@/components/LinkField.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import UomDialog from "@/components/UomDialog.vue"
 import { api, getDoc, insertDoc } from "@/api"
 import { money } from "@/format"
-import { can, currency } from "@/store"
+import { can, currency, deskAccess } from "@/store"
 
 // without `name` it is a new item
 const props = defineProps<{ name?: string }>()

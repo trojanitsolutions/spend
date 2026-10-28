@@ -12,8 +12,9 @@
 				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4">
 					<legend class="px-1 text-base font-semibold">Asset</legend>
 					<FormControl v-model="doc.asset_name" label="Asset name" required placeholder="e.g. MacBook Pro 14" />
-					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 						<FormControl v-model="doc.location" label="Location" />
+						<LinkField v-model="doc.project" doctype="Project" label="Project" :filters="{ company: session.company, status: 'Open' }" description="Depreciation is charged to it" />
 						<LinkField v-model="doc.cost_center" doctype="Cost Center" label="Cost center" :filters="{ company: session.company, is_group: 0 }" />
 					</div>
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -92,15 +93,16 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import { Button, FormControl, toast } from "frappe-ui"
 import LinkField from "@/components/LinkField.vue"
 import PageHeader from "@/components/PageHeader.vue"
-import { api, insertDoc, submitDoc } from "@/api"
+import { api, getDoc, insertDoc, submitDoc } from "@/api"
 import { previewSchedule } from "@/depreciation"
 import { date, money, today } from "@/format"
 import { can, currency, session } from "@/store"
 
+const route = useRoute()
 const router = useRouter()
 const saving = ref(false)
 const fmt = (v: number) => money(v, currency.value)
@@ -108,6 +110,7 @@ const fmt = (v: number) => money(v, currency.value)
 const doc = reactive<Record<string, any>>({
 	asset_name: "",
 	location: "",
+	project: (route.query.project as string) || "",
 	cost_center: "",
 	gross_purchase_amount: "",
 	purchase_date: today(),
@@ -163,9 +166,12 @@ async function save(submit: boolean) {
 }
 
 onMounted(async () => {
-	const defaults = await api("spend.spend.doctype.company.company.get_company_defaults", { company: session.company })
+	const [defaults, projectCostCenter] = await Promise.all([
+		api("spend.spend.doctype.company.company.get_company_defaults", { company: session.company }),
+		doc.project ? getDoc<{ cost_center?: string }>("Project", doc.project).then((p) => p.cost_center) : null,
+	])
 	Object.assign(doc, {
-		cost_center: defaults.default_cost_center || "",
+		cost_center: projectCostCenter || defaults.default_cost_center || "",
 		fixed_asset_account: defaults.fixed_asset_account || "",
 		accumulated_depreciation_account: defaults.accumulated_depreciation_account || "",
 		depreciation_expense_account: defaults.depreciation_expense_account || "",

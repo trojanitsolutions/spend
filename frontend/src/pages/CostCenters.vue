@@ -5,7 +5,7 @@
 				<div class="w-44">
 					<FormControl v-model="fiscalYear" type="select" :options="session.fiscalYears.map((f) => f.name)" aria-label="Fiscal year" />
 				</div>
-				<Button icon-left="lucide-external-link" label="Manage in Desk" @click="openDesk" />
+				<Button v-if="deskAccess" icon-left="lucide-external-link" label="Manage in Desk" @click="openDesk" />
 			</template>
 		</PageHeader>
 		<TreeTable
@@ -33,7 +33,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import TreeTable from "@/components/TreeTable.vue"
 import { runReport } from "@/api"
 import { money, percent } from "@/format"
-import { currency, session } from "@/store"
+import { currency, deskAccess, session } from "@/store"
 
 const rows = ref<any[]>([])
 const loading = ref(false)

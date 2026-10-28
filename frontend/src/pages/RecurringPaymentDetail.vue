@@ -4,7 +4,7 @@
 		<PageHeader :title="rp.title" :subtitle="subtitle" :back="{ to: '/recurring', label: 'Recurring Payments' }">
 			<template #badge><StatusBadge :status="rp.status" /></template>
 			<template #actions>
-				<Button label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
+				<Button v-if="deskAccess" label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
 				<template v-if="detail.can_submit">
 					<Button v-if="rp.docstatus === 0 && !needsApproval('Recurring Payment')" variant="solid" label="Activate" :loading="busy" @click="activate" />
 					<template v-if="rp.status === 'Active'">
@@ -21,51 +21,53 @@
 			</template>
 		</PageHeader>
 
-		<div class="space-y-6 p-4 sm:p-6">
-			<VersionsCard :name="name" base="recurring" :versions="versions" :currency="rp.currency" />
-			<ApprovalBar doctype="Recurring Payment" :name="name" @changed="load" />
-			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-				<StatCard label="Total" :value="fmt(rp.total_amount)" :hint="`${rp.schedule.length} payments · ${rp.frequency}`" />
-				<StatCard label="Paid" :value="fmt(rp.paid_amount)" :hint="`${paidRows.length} posted`" />
-				<StatCard label="Remaining" :value="fmt(rp.total_amount - rp.paid_amount)" />
-				<StatCard label="Next payment" :value="next ? date(next.payment_date) : '—'" :hint="next ? fmt(next.amount) : 'Nothing left'" :tone="next && rowStatus(next) === 'Due' ? 'amber' : undefined" />
-			</div>
-			<p v-if="room" class="text-sm text-ink-gray-6">
-				<template v-if="room.share">{{ detail.project_name || rp.project }}'s share of {{ room.account }} on </template>
-				<template v-else>{{ room.account }} on </template>
-				<RouterLink :to="`/budgets/${rp.budget}`" class="hover:underline">{{ rp.budget }}</RouterLink>:
-				<template v-if="room.limit === null">no limit</template>
-				<template v-else>
-					{{ fmt(room.limit) }} · held {{ fmt(room.held) }}{{ rp.docstatus === 1 ? " with this payment" : "" }} ·
-					<b :class="room.free < 0 || (rp.docstatus === 0 && room.free < rp.total_amount) ? 'text-ink-red-4' : 'text-ink-gray-9'">{{ fmt(room.free) }} free</b>
-					<template v-if="rp.docstatus === 0"> · this payment needs {{ fmt(rp.total_amount) }}</template>
-				</template>
-			</p>
-
-			<section class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payment schedule</h2>
-				<DataTable class="mt-2" :columns="scheduleColumns" :rows="rp.schedule">
-					<template #status="{ row }"><StatusBadge :status="rowStatus(row)" /></template>
-					<template #journal_entry="{ value }">
-						<a v-if="value" :href="`/app/journal-entry/${value}`" target="_blank" class="hover:underline">{{ value }}</a>
-						<span v-else class="text-ink-gray-5">—</span>
+		<DocLayout doctype="Recurring Payment" :name="name" :version="rp.modified">
+			<div class="space-y-6">
+				<VersionsCard :name="name" base="recurring" :versions="versions" :currency="rp.currency" />
+				<ApprovalBar doctype="Recurring Payment" :name="name" @changed="load" />
+				<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+					<StatCard label="Total" :value="fmt(rp.total_amount)" :hint="`${rp.schedule.length} payments · ${rp.frequency}`" />
+					<StatCard label="Paid" :value="fmt(rp.paid_amount)" :hint="`${paidRows.length} posted`" />
+					<StatCard label="Remaining" :value="fmt(rp.total_amount - rp.paid_amount)" />
+					<StatCard label="Next payment" :value="next ? date(next.payment_date) : '—'" :hint="next ? fmt(next.amount) : 'Nothing left'" :tone="next && rowStatus(next) === 'Due' ? 'amber' : undefined" />
+				</div>
+				<p v-if="room" class="text-sm text-ink-gray-6">
+					<template v-if="room.share">{{ detail.project_name || rp.project }}'s share of {{ room.account }} on </template>
+					<template v-else>{{ room.account }} on </template>
+					<RouterLink :to="`/budgets/${rp.budget}`" class="hover:underline">{{ rp.budget }}</RouterLink>:
+					<template v-if="room.limit === null">no limit</template>
+					<template v-else>
+						{{ fmt(room.limit) }} · held {{ fmt(room.held) }}{{ rp.docstatus === 1 ? " with this payment" : "" }} ·
+						<b :class="room.free < 0 || (rp.docstatus === 0 && room.free < rp.total_amount) ? 'text-ink-red-4' : 'text-ink-gray-9'">{{ fmt(room.free) }} free</b>
+						<template v-if="rp.docstatus === 0"> · this payment needs {{ fmt(rp.total_amount) }}</template>
 					</template>
-				</DataTable>
-			</section>
+				</p>
 
-			<section class="rounded-xl border border-outline-gray-1 p-4">
-				<h2 class="mb-3 text-base font-semibold">Details</h2>
-				<dl class="grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
-					<div v-for="[label, value] in details" :key="label" class="flex justify-between gap-4">
-						<dt class="text-ink-gray-5">{{ label }}</dt>
-						<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">
-							<RouterLink v-if="label === 'Budget' && value" :to="`/budgets/${value}`" class="hover:underline">{{ value }}</RouterLink>
-							<template v-else>{{ value || "—" }}</template>
-						</dd>
-					</div>
-				</dl>
-			</section>
-		</div>
+				<section class="rounded-xl border border-outline-gray-1">
+					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payment schedule</h2>
+					<DataTable class="mt-2" :columns="scheduleColumns" :rows="rp.schedule">
+						<template #status="{ row }"><StatusBadge :status="rowStatus(row)" /></template>
+						<template #journal_entry="{ value }">
+							<RouterLink v-if="value" :to="`/entries/${value}`" class="hover:underline" @click.stop>{{ value }}</RouterLink>
+							<span v-else class="text-ink-gray-5">—</span>
+						</template>
+					</DataTable>
+				</section>
+
+				<section class="rounded-xl border border-outline-gray-1 p-4">
+					<h2 class="mb-3 text-base font-semibold">Details</h2>
+					<dl class="grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+						<div v-for="[label, value] in details" :key="label" class="flex justify-between gap-4">
+							<dt class="text-ink-gray-5">{{ label }}</dt>
+							<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">
+								<RouterLink v-if="label === 'Budget' && value" :to="`/budgets/${value}`" class="hover:underline">{{ value }}</RouterLink>
+								<template v-else>{{ value || "—" }}</template>
+							</dd>
+						</div>
+					</dl>
+				</section>
+			</div>
+		</DocLayout>
 	</div>
 </template>
 
@@ -75,15 +77,16 @@ import { useRouter } from "vue-router"
 import { Button, dialog, LoadingText, toast } from "frappe-ui"
 import ApprovalBar from "@/components/ApprovalBar.vue"
 import DataTable, { type Column } from "@/components/DataTable.vue"
+import DocLayout from "@/components/DocLayout.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import StatCard from "@/components/StatCard.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
 import VersionsCard from "@/components/VersionsCard.vue"
 import { api, cancelDoc, categoryLabel, getRecurringRoom, getVersions, submitDoc, type RecurringRoom, type Version } from "@/api"
 import { date, money, today } from "@/format"
-import { can, currency, needsApproval } from "@/store"
+import { can, currency, deskAccess, needsApproval } from "@/store"
 
-const METHOD = "spend.spend.doctype.recurring_payment.recurring_payment"
+const METHOD = "spend.purchasing.doctype.recurring_payment.recurring_payment"
 
 const props = defineProps<{ name: string }>()
 
@@ -100,7 +103,7 @@ const fmt = (v: number) => money(v, rp.value?.currency || currency.value)
 const paidRows = computed(() => rp.value.schedule.filter((r: any) => r.journal_entry))
 const next = computed(() => rp.value.schedule.find((r: any) => !r.journal_entry))
 const dueCount = computed(() => rp.value.schedule.filter((r: any) => rowStatus(r) === "Due").length)
-const subtitle = computed(() => [rp.value.name, rp.value.payee && `Paid to ${rp.value.payee}`, `${date(rp.value.from_date)} – ${date(rp.value.to_date)}`].filter(Boolean).join(" · "))
+const subtitle = computed(() => [rp.value.name, rp.value.payee && `Payee: ${rp.value.payee}`, `${date(rp.value.from_date)} – ${date(rp.value.to_date)}`].filter(Boolean).join(" · "))
 
 const scheduleColumns: Column[] = [
 	{ key: "payment_date", label: "Date", format: date },
@@ -112,8 +115,8 @@ const scheduleColumns: Column[] = [
 const details = computed(() => {
 	const numbered = (account: string) => [detail.value.account_numbers[account], account].filter(Boolean).join(" · ")
 	return [
-		["Expense account", numbered(rp.value.expense_account)],
-		["Paid from", numbered(rp.value.paid_from)],
+		["Paid from (debit)", numbered(rp.value.expense_account)],
+		["Paid to (credit)", numbered(rp.value.paid_from)],
 		["Project", rp.value.project],
 		["Category", categoryLabel(rp.value.expense_category, rp.value.expense_sub_category)],
 		["Budget", rp.value.budget],

@@ -4,79 +4,81 @@
 		<PageHeader :title="bill.supplier" :subtitle="`${bill.name}${bill.bill_no ? ` · Supplier ref ${bill.bill_no}` : ''}`" :back="{ to: '/bills', label: 'Bills' }">
 			<template #badge><StatusBadge :status="bill.status" /></template>
 			<template #actions>
-				<Button label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
+				<Button v-if="deskAccess" label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
 				<Button
 					v-if="bill.docstatus === 1"
 					label="Ledger"
 					icon-left="lucide-book-text"
 					@click="$router.push({ path: '/reports/general-ledger', query: { voucher_no: bill.name, from_date: bill.posting_date, to_date: bill.posting_date } })"
 				/>
-				<Button v-if="bill.docstatus === 0 && detail.can_submit && !needsApproval('Purchase Invoice')" variant="solid" label="Submit" :loading="busy" @click="submit" />
+				<Button v-if="bill.docstatus === 0 && detail.can_submit && !needsApproval('Purchase Invoice')" v-tour="'bill.detail.submit'" variant="solid" label="Submit" :loading="busy" @click="submit" />
 				<Button
 					v-if="bill.docstatus === 1 && bill.outstanding_amount > 0 && can('Supplier Payment', 'create')"
 					variant="solid"
 					icon-left="lucide-banknote"
 					label="Record Payment"
-					@click="$router.push({ path: '/payments/new', query: { supplier: bill.supplier, invoice: bill.name } })"
+					@click="$router.push({ path: '/payments/new', query: { supplier: bill.supplier, invoice: bill.name, ...(bill.project ? { project: bill.project } : {}) } })"
 				/>
 				<Button v-if="bill.docstatus === 1 && detail.can_cancel" theme="red" label="Cancel Bill" :loading="busy" @click="cancelBill" />
 			</template>
 		</PageHeader>
 
-		<div class="space-y-6 p-4 sm:p-6">
-			<ApprovalBar doctype="Purchase Invoice" :name="name" @changed="load" />
-			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-				<StatCard label="Total" :value="fmt(bill.grand_total)" :hint="`Posted ${date(bill.posting_date)}`" />
-				<StatCard label="Paid" :value="fmt(paid)" :hint="`${activePayments.length} payments`" />
-				<StatCard label="Outstanding" :value="fmt(bill.docstatus === 1 ? bill.outstanding_amount : bill.grand_total)" :tone="bill.status === 'Overdue' ? 'red' : undefined" />
-				<StatCard label="Due" :value="date(bill.due_date)" :tone="bill.status === 'Overdue' ? 'red' : undefined" :hint="dueHint" />
-			</div>
+		<DocLayout doctype="Purchase Invoice" :name="name" :version="bill.modified">
+			<div class="space-y-6">
+				<ApprovalBar doctype="Purchase Invoice" :name="name" @changed="load" />
+				<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+					<StatCard label="Total" :value="fmt(bill.grand_total)" :hint="`Posted ${date(bill.posting_date)}`" />
+					<StatCard label="Paid" :value="fmt(paid)" :hint="`${activePayments.length} payments`" />
+					<StatCard label="Outstanding" :value="fmt(bill.docstatus === 1 ? bill.outstanding_amount : bill.grand_total)" :tone="bill.status === 'Overdue' ? 'red' : undefined" />
+					<StatCard label="Due" :value="date(bill.due_date)" :tone="bill.status === 'Overdue' ? 'red' : undefined" :hint="dueHint" />
+				</div>
 
-			<section class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Items</h2>
-				<DataTable class="mt-2" :columns="itemColumns" :rows="bill.items">
-					<template #item_code="{ row }">
-						<div class="font-medium text-ink-gray-9">
-							{{ row.item_name || row.item_code || "—" }}<Badge v-if="row.is_fixed_asset" class="ml-2" theme="blue" label="Fixed asset" />
-						</div>
-						<div v-if="row.item_code && row.item_name !== row.item_code" class="text-sm text-ink-gray-5">{{ row.item_code }}</div>
-					</template>
-					<template #expense_account="{ value }">
-						<span class="tabular-nums text-ink-gray-5">{{ detail.account_numbers[value] }}</span>
-						<span class="ml-1">{{ value }}</span>
-					</template>
-				</DataTable>
-				<div class="flex justify-end border-t border-outline-gray-1 px-4 py-3 text-base font-semibold tabular-nums sm:px-6">Total {{ fmt(bill.grand_total) }}</div>
-			</section>
-
-			<section v-if="detail.assets.length" class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Assets from this bill</h2>
-				<DataTable class="mt-2" :columns="assetColumns" :rows="detail.assets" clickable @row-click="(r) => $router.push(`/assets/${r.name}`)">
-					<template #status="{ value }"><StatusBadge :status="value" /></template>
-				</DataTable>
-			</section>
-
-			<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-				<section class="rounded-xl border border-outline-gray-1 p-4">
-					<h2 class="mb-3 text-base font-semibold">Details</h2>
-					<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-						<template v-for="[label, value] in details" :key="label">
-							<dt class="text-ink-gray-5">{{ label }}</dt>
-							<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">{{ value || "—" }}</dd>
+				<section class="rounded-xl border border-outline-gray-1">
+					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Items</h2>
+					<DataTable class="mt-2" :columns="itemColumns" :rows="bill.items">
+						<template #item_code="{ row }">
+							<div class="font-medium text-ink-gray-9">
+								{{ row.item_name || row.item_code || "—" }}<Badge v-if="row.is_fixed_asset" class="ml-2" theme="blue" label="Fixed asset" />
+							</div>
+							<div v-if="row.item_code && row.item_name !== row.item_code" class="text-sm text-ink-gray-5">{{ row.item_code }}</div>
 						</template>
-					</dl>
-				</section>
-				<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
-					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
-					<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments yet" @row-click="(r) => $router.push(`/payments/${r.name}`)">
-						<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
-						<template #actions="{ row }">
-							<Button v-if="row.docstatus === 1 && can('Supplier Payment', 'cancel')" size="sm" theme="red" label="Cancel" @click.stop="confirmCancelPayment(row.name, load)" />
+						<template #expense_account="{ value }">
+							<span class="tabular-nums text-ink-gray-5">{{ detail.account_numbers[value] }}</span>
+							<span class="ml-1">{{ value }}</span>
 						</template>
 					</DataTable>
+					<div class="flex justify-end border-t border-outline-gray-1 px-4 py-3 text-base font-semibold tabular-nums sm:px-6">Total {{ fmt(bill.grand_total) }}</div>
 				</section>
+
+				<section v-if="detail.assets.length" class="rounded-xl border border-outline-gray-1">
+					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Assets from this bill</h2>
+					<DataTable class="mt-2" :columns="assetColumns" :rows="detail.assets" clickable @row-click="(r) => $router.push(`/assets/${r.name}`)">
+						<template #status="{ value }"><StatusBadge :status="value" /></template>
+					</DataTable>
+				</section>
+
+				<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+					<section class="rounded-xl border border-outline-gray-1 p-4">
+						<h2 class="mb-3 text-base font-semibold">Details</h2>
+						<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+							<template v-for="[label, value] in details" :key="label">
+								<dt class="text-ink-gray-5">{{ label }}</dt>
+								<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">{{ value || "—" }}</dd>
+							</template>
+						</dl>
+					</section>
+					<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
+						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
+						<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments yet" @row-click="(r) => $router.push(`/payments/${r.name}`)">
+							<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
+							<template #actions="{ row }">
+								<Button v-if="row.docstatus === 1 && can('Supplier Payment', 'cancel')" size="sm" theme="red" label="Cancel" @click.stop="confirmCancelPayment(row.name, load)" />
+							</template>
+						</DataTable>
+					</section>
+				</div>
 			</div>
-		</div>
+		</DocLayout>
 	</div>
 </template>
 
@@ -85,13 +87,14 @@ import { computed, onMounted, ref } from "vue"
 import { Badge, Button, dialog, LoadingText, toast } from "frappe-ui"
 import ApprovalBar from "@/components/ApprovalBar.vue"
 import DataTable, { type Column } from "@/components/DataTable.vue"
+import DocLayout from "@/components/DocLayout.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import StatCard from "@/components/StatCard.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
 import { api, cancelDoc, categoryLabel, submitDoc } from "@/api"
 import { date, docstatusLabel, money, today } from "@/format"
 import { confirmCancelPayment } from "@/payments"
-import { can, currency, needsApproval } from "@/store"
+import { can, currency, deskAccess, needsApproval } from "@/store"
 
 const props = defineProps<{ name: string }>()
 

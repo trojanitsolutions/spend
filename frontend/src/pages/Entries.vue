@@ -2,7 +2,7 @@
 	<div>
 		<PageHeader :title="page.title" :subtitle="page.subtitle">
 			<template #actions>
-				<Button v-if="can('Journal Entry', 'create')" variant="solid" icon-left="lucide-plus" :label="page.newLabel" @click="$router.push(`${page.path}/new`)" />
+				<Button v-if="can('Journal Entry', 'create')" v-tour="`${page.path.slice(1)}.new`" variant="solid" icon-left="lucide-plus" :label="page.newLabel" @click="$router.push(`${page.path}/new`)" />
 			</template>
 		</PageHeader>
 

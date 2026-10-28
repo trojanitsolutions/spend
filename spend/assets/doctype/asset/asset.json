@@ -1,0 +1,382 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:AST-{YYYY}-{#####}",
+ "creation": "2026-10-26 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "asset_name",
+  "company",
+  "location",
+  "item_code",
+  "purchase_invoice",
+  "column_break_1",
+  "status",
+  "cost_center",
+  "project",
+  "currency",
+  "section_break_purchase",
+  "purchase_date",
+  "gross_purchase_amount",
+  "available_for_use_date",
+  "column_break_purchase",
+  "capitalization_credit_account",
+  "capitalization_entry",
+  "section_break_depreciation",
+  "calculate_depreciation",
+  "depreciation_method",
+  "frequency_of_depreciation",
+  "useful_life_years",
+  "depreciation_start_date",
+  "column_break_depreciation",
+  "salvage_value",
+  "rate_of_depreciation",
+  "total_number_of_depreciations",
+  "section_break_accounts",
+  "fixed_asset_account",
+  "column_break_accounts",
+  "accumulated_depreciation_account",
+  "depreciation_expense_account",
+  "section_break_values",
+  "accumulated_depreciation",
+  "value_after_depreciation",
+  "column_break_values",
+  "depreciation_schedule",
+  "section_break_projects",
+  "project_movements",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "asset_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Asset Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Location"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nSubmitted\nPartially Depreciated\nFully Depreciated\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "allow_on_submit": 1,
+   "description": "On a submitted asset, a change is recorded under Project History"
+  },
+  {
+   "fetch_from": "company.default_currency",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_purchase",
+   "fieldtype": "Section Break",
+   "label": "Purchase & Capitalization"
+  },
+  {
+   "fieldname": "purchase_date",
+   "fieldtype": "Date",
+   "label": "Purchase Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gross_purchase_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Gross Purchase Amount",
+   "options": "currency",
+   "reqd": 1
+  },
+  {
+   "description": "Date the asset is available for use",
+   "fieldname": "available_for_use_date",
+   "fieldtype": "Date",
+   "label": "Capitalization Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_purchase",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "If set, submitting posts Dr Fixed Asset / Cr this account (e.g. Creditors or Bank)",
+   "fieldname": "capitalization_credit_account",
+   "fieldtype": "Link",
+   "label": "Capitalization Credit Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "capitalization_entry",
+   "fieldtype": "Link",
+   "label": "Capitalization Entry",
+   "no_copy": 1,
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_depreciation",
+   "fieldtype": "Section Break",
+   "label": "Depreciation"
+  },
+  {
+   "default": "1",
+   "fieldname": "calculate_depreciation",
+   "fieldtype": "Check",
+   "label": "Calculate Depreciation"
+  },
+  {
+   "default": "Straight Line",
+   "depends_on": "calculate_depreciation",
+   "fieldname": "depreciation_method",
+   "fieldtype": "Select",
+   "label": "Depreciation Method",
+   "mandatory_depends_on": "calculate_depreciation",
+   "options": "Straight Line\nWritten Down Value"
+  },
+  {
+   "default": "Monthly",
+   "depends_on": "calculate_depreciation",
+   "fieldname": "frequency_of_depreciation",
+   "fieldtype": "Select",
+   "label": "Frequency",
+   "mandatory_depends_on": "calculate_depreciation",
+   "options": "Monthly\nQuarterly\nHalf-Yearly\nYearly"
+  },
+  {
+   "depends_on": "calculate_depreciation",
+   "fieldname": "useful_life_years",
+   "fieldtype": "Float",
+   "label": "Useful Life (Years)",
+   "mandatory_depends_on": "calculate_depreciation"
+  },
+  {
+   "depends_on": "calculate_depreciation",
+   "description": "Date of the first depreciation posting. Defaults to the end of the first period after capitalization.",
+   "fieldname": "depreciation_start_date",
+   "fieldtype": "Date",
+   "label": "Depreciation Start Date"
+  },
+  {
+   "fieldname": "column_break_depreciation",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "calculate_depreciation",
+   "description": "Expected value after useful life. Book value never goes below this.",
+   "fieldname": "salvage_value",
+   "fieldtype": "Currency",
+   "label": "Salvage Value",
+   "options": "currency"
+  },
+  {
+   "depends_on": "eval:doc.calculate_depreciation && doc.depreciation_method=='Written Down Value'",
+   "description": "Optional. If empty, the rate is derived so that the book value reaches the salvage value at the end of useful life.",
+   "fieldname": "rate_of_depreciation",
+   "fieldtype": "Percent",
+   "label": "Annual Rate of Depreciation"
+  },
+  {
+   "depends_on": "calculate_depreciation",
+   "fieldname": "total_number_of_depreciations",
+   "fieldtype": "Int",
+   "label": "Number of Depreciations",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_accounts",
+   "fieldtype": "Section Break",
+   "label": "Accounts"
+  },
+  {
+   "fieldname": "fixed_asset_account",
+   "fieldtype": "Link",
+   "label": "Fixed Asset Account",
+   "options": "Account",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_accounts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "accumulated_depreciation_account",
+   "fieldtype": "Link",
+   "label": "Accumulated Depreciation Account",
+   "mandatory_depends_on": "calculate_depreciation",
+   "options": "Account"
+  },
+  {
+   "fieldname": "depreciation_expense_account",
+   "fieldtype": "Link",
+   "label": "Depreciation Expense Account",
+   "mandatory_depends_on": "calculate_depreciation",
+   "options": "Account"
+  },
+  {
+   "fieldname": "section_break_values",
+   "fieldtype": "Section Break",
+   "label": "Book Value"
+  },
+  {
+   "fieldname": "accumulated_depreciation",
+   "fieldtype": "Currency",
+   "label": "Accumulated Depreciation",
+   "no_copy": 1,
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "value_after_depreciation",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Book Value",
+   "no_copy": 1,
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_values",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "depreciation_schedule",
+   "fieldtype": "Link",
+   "label": "Depreciation Schedule",
+   "no_copy": 1,
+   "options": "Asset Depreciation Schedule",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_projects",
+   "fieldtype": "Section Break",
+   "label": "Project History",
+   "collapsible": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "project_movements",
+   "fieldtype": "Table",
+   "label": "Project Moves",
+   "no_copy": 1,
+   "options": "Asset Project Movement",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Asset",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item",
+   "read_only_depends_on": "purchase_invoice"
+  },
+  {
+   "fieldname": "purchase_invoice",
+   "fieldtype": "Link",
+   "label": "Purchase Invoice",
+   "no_copy": 1,
+   "options": "Purchase Invoice",
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 0,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-28 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Assets",
+ "name": "Asset",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "asset_name,status",
+ "show_title_field_in_link": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "asset_name",
+ "track_changes": 1
+}

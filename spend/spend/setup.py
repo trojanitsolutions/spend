@@ -4,8 +4,9 @@
 """Install-time setup: roles and the standard chart of accounts for new companies."""
 
 import frappe
+from frappe import _
 
-ROLES = ("Accounts Manager", "Accounts User", "General Manager")
+ROLES = ("Accounts Manager", "General Manager")
 
 # (account_number, account_name, account_type, children). Root entries carry their root type.
 STANDARD_CHART = [
@@ -148,7 +149,7 @@ UOMS = (
 
 
 def setup_items():
-	from spend.spend.doctype.item_group.item_group import make_root
+	from spend.purchasing.doctype.item_group.item_group import make_root
 
 	for uom, whole in UOMS:
 		if not frappe.db.exists("UOM", uom):
@@ -156,6 +157,31 @@ def setup_items():
 				ignore_permissions=True
 			)
 	make_root()
+
+
+@frappe.whitelist(methods=["POST"])
+def setup_company(company_name: str, abbr: str, currency: str) -> dict:
+	"""First run: create the first company with its chart of accounts, and make Spend the
+	app every user lands on after login."""
+	from spend.api import check_app_permission
+
+	check_app_permission()
+	frappe.has_permission("Company", "create", throw=True)
+	if frappe.db.count("Company"):
+		frappe.throw(_("Spend is already set up"))
+
+	company = frappe.get_doc(
+		{
+			"doctype": "Company",
+			"company_name": (company_name or "").strip(),
+			"abbr": abbr,
+			"default_currency": currency,
+			"create_default_accounts": 1,
+		}
+	).insert()
+	frappe.db.set_single_value("System Settings", "default_app", "spend")
+	frappe.defaults.set_user_default("company", company.name)
+	return {"name": company.name}
 
 
 def create_roles():

@@ -2,7 +2,7 @@
 	<div>
 		<PageHeader title="Payments" subtitle="Money paid to suppliers against their bills">
 			<template #actions>
-				<Button v-if="can('Supplier Payment', 'create')" variant="solid" icon-left="lucide-plus" label="Pay Supplier" @click="$router.push('/payments/new')" />
+				<Button v-if="can('Supplier Payment', 'create')" v-tour="'payments.new'" variant="solid" icon-left="lucide-plus" label="Pay Supplier" @click="$router.push('/payments/new')" />
 			</template>
 		</PageHeader>
 

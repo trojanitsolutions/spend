@@ -11,21 +11,24 @@
 		<div v-if="!data" class="p-6"><LoadingText /></div>
 		<div v-else class="space-y-6 p-4 sm:p-6">
 			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-				<StatCard icon="lucide-wallet" label="Spent this year" :value="fmt(data.budget.actual)">
-					<template v-if="data.budget.allocated">of {{ fmt(data.budget.allocated) }} budgeted</template>
-					<template v-else>No budgets for this year</template>
-				</StatCard>
-				<StatCard
-					icon="lucide-gauge"
-					label="Budget utilization"
-					:value="percent(data.budget.utilization)"
-					:tone="data.budget.allocated ? utilizationTone(data.budget.utilization) : undefined"
-					:hint="data.budget.allocated ? `${fmt(data.budget.allocated - data.budget.actual)} remaining` : '—'"
-				/>
-				<StatCard icon="lucide-laptop" label="Asset book value" :value="fmt(data.assets.book_value)">
+				<template v-if="data.budget">
+					<StatCard icon="lucide-wallet" label="Spent this year" :value="fmt(data.budget.actual)">
+						<template v-if="data.budget.allocated">of {{ fmt(data.budget.allocated) }} budgeted</template>
+						<template v-else>No budgets for this year</template>
+					</StatCard>
+					<StatCard
+						icon="lucide-gauge"
+						label="Budget utilization"
+						:value="percent(data.budget.utilization)"
+						:tone="data.budget.allocated ? utilizationTone(data.budget.utilization) : undefined"
+						:hint="data.budget.allocated ? `${fmt(data.budget.allocated - data.budget.actual)} remaining` : '—'"
+					/>
+				</template>
+				<StatCard v-if="data.assets" icon="lucide-laptop" label="Asset book value" :value="fmt(data.assets.book_value)">
 					{{ data.assets.count }} assets · {{ fmt(data.assets.accumulated) }} depreciated
 				</StatCard>
 				<StatCard
+					v-if="data.depreciation_due"
 					icon="lucide-calendar-clock"
 					label="Depreciation due"
 					:value="fmt(data.depreciation_due.amount)"
@@ -39,7 +42,7 @@
 					</span>
 					<span v-else>All caught up</span>
 				</StatCard>
-				<StatCard icon="lucide-file-text" label="Owed to suppliers" :value="fmt(data.payables.outstanding)" :tone="data.payables.overdue > 0 ? 'red' : undefined">
+				<StatCard v-if="data.payables" icon="lucide-file-text" label="Owed to suppliers" :value="fmt(data.payables.outstanding)" :tone="data.payables.overdue > 0 ? 'red' : undefined">
 					<RouterLink v-if="data.payables.overdue > 0" to="/bills" class="underline">
 						{{ fmt(data.payables.overdue) }} overdue · {{ data.payables.overdue_count }} bills
 					</RouterLink>
@@ -48,8 +51,8 @@
 				</StatCard>
 			</div>
 
-			<div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-				<section class="rounded-xl border border-outline-gray-1 p-4 xl:col-span-2">
+			<div v-if="data.spending_trend || data.budget" class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+				<section v-if="data.spending_trend" class="rounded-xl border border-outline-gray-1 p-4 xl:col-span-2">
 					<h2 class="mb-4 text-base font-semibold">Monthly spending</h2>
 					<BarChart
 						:labels="data.spending_trend.map((m: any) => m.month)"
@@ -58,7 +61,7 @@
 					/>
 				</section>
 
-				<section class="rounded-xl border border-outline-gray-1 p-4">
+				<section v-if="data.budget" class="rounded-xl border border-outline-gray-1 p-4">
 					<div class="mb-4 flex items-center justify-between">
 						<h2 class="text-base font-semibold">Budgets to watch</h2>
 						<RouterLink to="/budgets" class="text-sm text-ink-gray-5 hover:text-ink-gray-8">All budgets</RouterLink>
@@ -72,7 +75,7 @@
 				</section>
 			</div>
 
-			<section v-if="data.projects.open" class="rounded-xl border border-outline-gray-1 p-4">
+			<section v-if="data.projects?.open" class="rounded-xl border border-outline-gray-1 p-4">
 				<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<h2 class="text-base font-semibold">
 						Projects
@@ -113,8 +116,8 @@
 				</DataTable>
 			</section>
 
-			<div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-				<section class="rounded-xl border border-outline-gray-1">
+			<div v-if="data.top_cost_centers || data.recent_entries" class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+				<section v-if="data.top_cost_centers" class="rounded-xl border border-outline-gray-1">
 					<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
 						<h2 class="text-base font-semibold">Top cost centers</h2>
 						<RouterLink to="/cost-centers" class="text-sm text-ink-gray-5 hover:text-ink-gray-8">View tree</RouterLink>
@@ -131,7 +134,7 @@
 						empty-text="No spending recorded this year"
 					/>
 				</section>
-				<section class="rounded-xl border border-outline-gray-1">
+				<section v-if="data.recent_entries" class="rounded-xl border border-outline-gray-1">
 					<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
 						<h2 class="text-base font-semibold">Recent entries</h2>
 						<div class="flex gap-3 text-sm text-ink-gray-5">

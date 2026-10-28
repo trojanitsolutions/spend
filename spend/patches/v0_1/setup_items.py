@@ -1,6 +1,6 @@
 import frappe
 
-from spend.spend.doctype.item_group.item_group import ROOT
+from spend.purchasing.doctype.item_group.item_group import ROOT
 from spend.spend.setup import setup_items
 
 

@@ -131,7 +131,7 @@ export const REPORTS: ReportDef[] = [
 	{
 		slug: "general-ledger",
 		name: "General Ledger",
-		description: "Every posted ledger row with opening, running and closing balances",
+		description: "Every posted ledger row, newest first, with running and closing balances",
 		icon: "lucide-book-text",
 		group: "Accounting",
 		filters: [

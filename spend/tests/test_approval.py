@@ -11,7 +11,6 @@ from spend.spend.approval import (
 	APPROVE,
 	APPROVED,
 	PENDING_GM,
-	PENDING_MANAGER,
 	REJECT,
 	REJECTED,
 	RESUBMIT,
@@ -49,16 +48,18 @@ PREPARER = "_spend_preparer@example.com"
 MANAGER = "_spend_manager@example.com"
 MANAGER_2 = "_spend_manager2@example.com"
 GM = "_spend_gm@example.com"
+GM_2 = "_spend_gm2@example.com"
 
 
 class TestApproval(SpendTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		make_user(PREPARER, ["Accounts User"])
+		make_user(PREPARER, ["Accounts Manager"])
 		make_user(MANAGER, ["Accounts Manager"])
 		make_user(MANAGER_2, ["Accounts Manager"])
 		make_user(GM, ["General Manager"])
+		make_user(GM_2, ["General Manager"])
 		make_supplier()
 
 	def setUp(self):
@@ -82,7 +83,6 @@ class TestApproval(SpendTestCase):
 
 	def approve_fully(self, doc, preparer=PREPARER):
 		doc = self.act(preparer, doc, SEND)
-		doc = self.act(MANAGER, doc, APPROVE)
 		return self.act(GM, doc, APPROVE)
 
 	def logs_for(self, user, doc=None, notification_type=APPROVAL):
@@ -93,13 +93,11 @@ class TestApproval(SpendTestCase):
 
 	# ------------------------------------------------------------ flow
 
-	def test_bill_needs_manager_then_gm(self):
+	def test_bill_needs_gm_approval(self):
 		bill = self.draft_bill()
 		self.assertEqual(bill.workflow_state, "Draft")
 
 		bill = self.act(PREPARER, bill, SEND)
-		self.assertEqual((bill.workflow_state, bill.docstatus), (PENDING_MANAGER, 0))
-		bill = self.act(MANAGER, bill, APPROVE)
 		self.assertEqual((bill.workflow_state, bill.docstatus), (PENDING_GM, 0))
 		bill = self.act(GM, bill, APPROVE)
 		self.assertEqual((bill.workflow_state, bill.docstatus), (APPROVED, 1))
@@ -111,24 +109,21 @@ class TestApproval(SpendTestCase):
 			bill.submit()
 
 		bill = self.act(PREPARER, bill, SEND)
-		bill = self.act(MANAGER, bill, APPROVE)
 		with self.assertRaises(ApprovalRequiredError):
 			frappe.get_doc(bill.doctype, bill.name).submit()
 
-	def test_only_the_right_role_approves_each_level(self):
+	def test_only_the_gm_approves(self):
 		bill = self.act(PREPARER, self.draft_bill(), SEND)
-		with self.assertRaises(WorkflowTransitionError):
-			self.act(PREPARER, bill, APPROVE)
-		with self.assertRaises(WorkflowTransitionError):
-			self.act(GM, bill, APPROVE)
+		for user in (PREPARER, MANAGER):
+			with self.assertRaises(WorkflowTransitionError):
+				self.act(user, bill, APPROVE)
 
-		bill = self.act(MANAGER, bill, APPROVE)
-		with self.assertRaises(WorkflowTransitionError):
-			self.act(MANAGER_2, bill, APPROVE)
+		bill = self.act(GM, bill, APPROVE)
+		self.assertEqual(bill.workflow_state, APPROVED)
 
 	def test_creator_cannot_approve_own_document(self):
 		entry = self.as_user(
-			MANAGER,
+			GM,
 			make_journal_entry,
 			account("Office Rent"),
 			account("Cash"),
@@ -136,18 +131,18 @@ class TestApproval(SpendTestCase):
 			"2025-04-01",
 			submit=False,
 		)
-		entry = self.act(MANAGER, entry, SEND)
+		entry = self.act(GM, entry, SEND)
 		with self.assertRaises(frappe.ValidationError):
-			self.act(MANAGER, entry, APPROVE)
-		entry = self.act(MANAGER_2, entry, APPROVE)
-		self.assertEqual(entry.workflow_state, PENDING_GM)
+			self.act(GM, entry, APPROVE)
+		entry = self.act(GM_2, entry, APPROVE)
+		self.assertEqual(entry.workflow_state, APPROVED)
 
 	def test_reject_needs_reason_and_can_be_resubmitted(self):
 		bill = self.act(PREPARER, self.draft_bill(), SEND)
 		with self.assertRaises(frappe.ValidationError):
-			self.act(MANAGER, bill, REJECT)
+			self.act(GM, bill, REJECT)
 
-		bill = self.act(MANAGER, bill, REJECT, reason="Wrong amount")
+		bill = self.act(GM, bill, REJECT, reason="Wrong amount")
 		self.assertEqual((bill.workflow_state, bill.docstatus), (REJECTED, 0))
 		self.assertTrue(
 			frappe.db.exists(
@@ -167,20 +162,18 @@ class TestApproval(SpendTestCase):
 		self.assertEqual(rejected, ["Reason: Wrong amount"])
 
 		bill = self.act(PREPARER, bill, RESUBMIT)
-		self.assertEqual(bill.workflow_state, PENDING_MANAGER)
+		self.assertEqual(bill.workflow_state, PENDING_GM)
 
 	def test_pending_list_shows_only_what_user_can_approve(self):
 		bill = self.act(PREPARER, self.draft_bill(), SEND)
 		names = lambda user: [r["name"] for r in self.as_user(user, get_pending_approvals, TEST_COMPANY)]  # noqa: E731
-		self.assertIn(bill.name, names(MANAGER))
-		self.assertNotIn(bill.name, names(GM))
-
-		self.assertEqual(self.as_user(MANAGER, get_counts, TEST_COMPANY)["pending"], 1)
-
-		self.act(MANAGER, bill, APPROVE)
-		self.assertNotIn(bill.name, names(MANAGER))
 		self.assertIn(bill.name, names(GM))
+		self.assertNotIn(bill.name, names(MANAGER))
 		self.assertEqual(self.as_user(GM, get_counts, TEST_COMPANY)["pending"], 1)
+		self.assertEqual(self.as_user(MANAGER, get_counts, TEST_COMPANY)["pending"], 0)
+
+		self.act(GM, bill, APPROVE)
+		self.assertNotIn(bill.name, names(GM))
 
 	def test_system_entries_of_approved_documents_post_directly(self):
 		rp = self.as_user(
@@ -227,13 +220,12 @@ class TestApproval(SpendTestCase):
 		)
 
 	def test_amended_budget_needs_approval_and_cancel_notifies(self):
-		from spend.spend.doctype.budget.test_budget import make_budget
+		from spend.budgeting.doctype.budget.test_budget import make_budget
 
 		frappe.set_user(MANAGER)
 		budget = make_budget({account("Office Rent"): 1000}, submit=False)
 		frappe.set_user("Administrator")
 		budget = self.act(MANAGER, budget, SEND)
-		budget = self.act(MANAGER_2, budget, APPROVE)
 		budget = self.act(GM, budget, APPROVE)
 		self.assertEqual(budget.docstatus, 1)
 
@@ -251,13 +243,30 @@ class TestApproval(SpendTestCase):
 
 		amended = self.act(MANAGER, amended, SEND)
 		message = frappe.db.get_value(
-			"Notification Log", {"for_user": MANAGER_2, "document_name": amended.name}, "email_content"
+			"Notification Log", {"for_user": GM, "document_name": amended.name}, "email_content"
 		)
 		self.assertIn(f"Amends {budget.name} · net change +", message)
-		amended = self.act(MANAGER_2, amended, APPROVE)
-		self.assertEqual(amended.docstatus, 0)
 		amended = self.act(GM, amended, APPROVE)
 		self.assertEqual((amended.workflow_state, amended.docstatus), (APPROVED, 1))
+
+	def test_approved_project_takes_the_approved_budget_revision(self):
+		from spend.budgeting.doctype.budget.test_budget import make_budget
+
+		budget = make_budget({account("Office Rent"): 1000}, submit=False)
+		budget = self.approve_fully(budget, preparer=MANAGER)
+		project = make_project("_Test Revised Project", budget=1000, budget_doc=budget.name)
+		project = self.approve_fully(project, preparer="Administrator")
+		self.as_user(MANAGER, budget.cancel)
+
+		amended = frappe.get_doc(get_amendment("Budget", budget.name)["doc"])
+		amended.update({"amendment_reason": "More rent"})
+		amended.accounts[0].budget_amount = 1500
+		self.as_user(MANAGER, amended.insert)
+		self.approve_fully(amended, preparer=MANAGER)
+
+		project.reload()
+		self.assertEqual((project.budget, project.budget_amount), (amended.name, 1500))
+		self.assertEqual(project.workflow_state, APPROVED)
 
 	def test_unapproved_project_cannot_be_booked(self):
 		project = make_project("_Test Approval Project", budget=10000)
@@ -282,13 +291,9 @@ class TestApproval(SpendTestCase):
 
 	def test_each_step_notifies_the_next_person(self):
 		bill = self.act(PREPARER, self.draft_bill(), SEND)
-		self.assertEqual(len(self.logs_for(MANAGER, bill)), 1)
-		self.assertEqual(len(self.logs_for(MANAGER_2, bill)), 1)
-		self.assertFalse(self.logs_for(GM, bill))
-
-		bill = self.act(MANAGER, bill, APPROVE)
 		self.assertEqual(len(self.logs_for(GM, bill)), 1)
-		self.assertEqual(len(self.logs_for(PREPARER, bill)), 1)
+		self.assertEqual(len(self.logs_for(GM_2, bill)), 1)
+		self.assertFalse(self.logs_for(MANAGER, bill))
 
 		self.act(GM, bill, APPROVE)
 		self.assertTrue(any("approved by" in s and "posted" in s for s in self.logs_for(PREPARER, bill)))

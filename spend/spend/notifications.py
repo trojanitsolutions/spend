@@ -13,7 +13,6 @@ from spend.spend.accounting import GL_PRECISION, get_balance, get_subtree
 from spend.spend.approval import (
 	APPROVED,
 	PENDING_GM,
-	PENDING_MANAGER,
 	REJECTED,
 	describe,
 	get_app_route,
@@ -131,24 +130,12 @@ def on_approval_change(doc, method=None):
 	actor = frappe.utils.get_fullname(frappe.session.user)
 	note = f" · {info['note']}" if info["note"] else ""
 
-	if new == PENDING_MANAGER:
-		notify(
-			users_with_role("Accounts Manager"),
-			_("{0} needs your approval").format(what),
-			doc,
-			_("Sent by {0}").format(actor) + note,
-		)
-	elif new == PENDING_GM:
+	if new == PENDING_GM:
 		notify(
 			users_with_role("General Manager"),
 			_("{0} needs your approval").format(what),
 			doc,
-			_("Approved by {0} (Accounts Manager)").format(actor) + note,
-		)
-		notify(
-			[doc.owner],
-			_("{0} was approved by {1} and is with the General Manager").format(label, actor),
-			doc,
+			_("Sent by {0}").format(actor) + note,
 		)
 	elif new == APPROVED:
 		posted = _(" and posted") if doc.docstatus == 1 else ""
@@ -228,7 +215,7 @@ def alert_subject(level: str, scope: str, after: float, limit: float, currency) 
 
 
 def get_project_alerts(lines, threshold, exceeded) -> list[tuple]:
-	from spend.spend.doctype.project.project import get_project_spent
+	from spend.projects.doctype.project.project import get_project_spent
 
 	alerts = []
 	for project_name in {project for _a, _c, project, _amt in lines if project}:
@@ -256,7 +243,7 @@ def get_project_alerts(lines, threshold, exceeded) -> list[tuple]:
 
 
 def get_budget_alerts(doc, lines, threshold, exceeded) -> list[tuple]:
-	from spend.spend.doctype.budget.budget import get_applicable_budgets
+	from spend.budgeting.doctype.budget.budget import get_applicable_budgets
 
 	alerts, seen = [], set()
 	for account, cost_center, _p, _amt in lines:
@@ -294,7 +281,7 @@ def notify_bills_due():
 		return
 	today = getdate(nowdate())
 	horizon = add_days(today, int(get_setting("bill_due_days") or 0))
-	recipients = users_with_role("Accounts User", "Accounts Manager")
+	recipients = users_with_role("Accounts Manager")
 	for company, currency in frappe.get_all("Company", fields=["name", "default_currency"], as_list=True):
 		subject = get_bills_due_subject(company, currency, today, horizon)
 		if subject:
@@ -376,7 +363,7 @@ def get_notifications(limit: int = 20, unread_only: int = 0) -> list[dict]:
 	filters = {"for_user": frappe.session.user}
 	if int(unread_only):
 		filters["read"] = 0
-	return frappe.get_all(
+	rows = frappe.get_all(
 		"Notification Log",
 		filters=filters,
 		fields=[
@@ -394,6 +381,11 @@ def get_notifications(limit: int = 20, unread_only: int = 0) -> list[dict]:
 		order_by="creation desc",
 		limit=min(int(limit), 200),
 	)
+	# Frappe's own notifications (mentions, assignments) carry no link; open them in the portal
+	for row in rows:
+		if not row.link and row.document_type and row.document_name:
+			row.link = get_app_route(row.document_type, row.document_name)
+	return rows
 
 
 @frappe.whitelist()
@@ -401,18 +393,12 @@ def get_counts(company: str | None = None) -> dict:
 	"""Unread notifications and documents waiting at an approval stage the user's roles can act on."""
 	from spend.spend.approval import get_active_approvals
 
-	roles = set(frappe.get_roles())
-	states = [
-		state
-		for state, role in ((PENDING_MANAGER, "Accounts Manager"), (PENDING_GM, "General Manager"))
-		if role in roles
-	]
 	pending = 0
-	if states:
+	if "General Manager" in frappe.get_roles():
 		for doctype in get_active_approvals():
 			if not frappe.has_permission(doctype, "read"):
 				continue
-			filters = {"workflow_state": ("in", states), "docstatus": 0, "owner": ("!=", frappe.session.user)}
+			filters = {"workflow_state": PENDING_GM, "docstatus": 0, "owner": ("!=", frappe.session.user)}
 			if company:
 				filters["company"] = company
 			pending += len(frappe.get_list(doctype, filters=filters, pluck="name", limit=500))

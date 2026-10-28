@@ -2,21 +2,21 @@
 	<div>
 		<PageHeader title="New Bill" subtitle="Records what you owe a supplier and books the expense" :back="{ to: '/bills', label: 'Bills' }">
 			<template #actions>
-				<Button label="Save Draft" :loading="saving" @click="save(false)" />
-				<Button v-if="can('Purchase Invoice', 'submit')" variant="solid" :label="needsApproval('Purchase Invoice') ? 'Save & Send for Approval' : 'Save & Submit'" :loading="saving" @click="save(true)" />
+				<Button v-tour="'bill.save_draft'" label="Save Draft" :loading="saving" @click="save(false)" />
+				<Button v-if="can('Purchase Invoice', 'submit')" v-tour="'bill.submit'" variant="solid" :label="needsApproval('Purchase Invoice') ? 'Save & Send for Approval' : 'Save & Submit'" :loading="saving" @click="save(true)" />
 			</template>
 		</PageHeader>
 
 		<form class="mx-auto max-w-4xl space-y-6 p-4 sm:p-6" @submit.prevent="save(false)">
 			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Bill</legend>
-				<LinkField v-model="doc.supplier" doctype="Supplier" label="Supplier" required :filters="{ disabled: 0 }" />
-				<FormControl v-model="doc.bill_no" label="Supplier invoice no." placeholder="As printed on the bill" />
-				<FormControl v-model="doc.posting_date" type="date" label="Posting date" required />
-				<FormControl v-model="doc.due_date" type="date" label="Due date" required />
+				<LinkField v-model="doc.supplier" v-tour="{ key: 'bill.supplier', value: doc.supplier }" doctype="Supplier" label="Supplier" required :filters="{ disabled: 0 }" />
+				<FormControl v-model="doc.bill_no" v-tour="'bill.bill_no'" label="Supplier invoice no." placeholder="As printed on the bill" />
+				<FormControl v-model="doc.posting_date" v-tour="{ key: 'bill.posting_date', value: doc.posting_date }" type="date" label="Posting date" required />
+				<FormControl v-model="doc.due_date" v-tour="{ key: 'bill.due_date', value: doc.due_date }" type="date" label="Due date" required />
 				<FormControl v-model="doc.bill_date" type="date" label="Supplier invoice date" />
-				<LinkField v-model="doc.cost_center" doctype="Cost Center" label="Default cost center" :filters="{ company: session.company, is_group: 0, disabled: 0 }" />
-				<LinkField v-model="doc.project" doctype="Project" label="Project" description="Tags every line without its own project" :filters="projectFilters" />
+				<LinkField v-model="doc.cost_center" v-tour="{ key: 'bill.cost_center', value: doc.cost_center }" doctype="Cost Center" label="Default cost center" :filters="{ company: session.company, is_group: 0, disabled: 0 }" />
+				<LinkField v-model="doc.project" v-tour="{ key: 'bill.project', value: doc.project }" doctype="Project" label="Project" description="Tags every line without its own project" :filters="projectFilters" />
 			</fieldset>
 
 			<fieldset class="space-y-3 rounded-xl border border-outline-gray-1 p-4">
@@ -26,6 +26,7 @@
 						<div class="col-span-2 flex items-end gap-1 sm:col-span-1">
 							<LinkField
 								class="min-w-0 flex-1"
+								v-tour="{ key: lineKey('item', i), value: item.item_code }"
 								:model-value="item.item_code"
 								doctype="Item"
 								:label="i === 0 ? 'Item' : undefined"
@@ -35,7 +36,7 @@
 							/>
 							<Button v-if="can('Item', 'create')" variant="ghost" icon="lucide-plus" aria-label="New item" title="New item" @click="creatingFor = item" />
 						</div>
-						<FormControl v-model="item.qty" type="number" min="0" step="any" :label="i === 0 ? 'Qty' : undefined" placeholder="1" />
+						<FormControl v-model="item.qty" v-tour="{ key: lineKey('qty', i), value: item.qty }" type="number" min="0" step="any" :label="i === 0 ? 'Qty' : undefined" placeholder="1" />
 						<FormControl
 							type="select"
 							:model-value="item.uom"
@@ -44,7 +45,7 @@
 							:disabled="!item.item_code"
 							@update:model-value="(uom: string) => setUom(item, uom)"
 						/>
-						<FormControl v-model="item.rate" type="number" min="0" step="0.01" :label="i === 0 ? `Rate${item.uom ? ' / ' + item.uom : ''}` : undefined" placeholder="0.00" />
+						<FormControl v-model="item.rate" v-tour="{ key: lineKey('rate', i), value: item.rate }" type="number" min="0" step="0.01" :label="i === 0 ? `Rate${item.uom ? ' / ' + item.uom : ''}` : undefined" placeholder="0.00" />
 						<div class="flex h-7 items-center justify-end text-base tabular-nums text-ink-gray-8" :class="{ 'sm:mt-5': i === 0 }" :title="i === 0 ? 'Amount' : undefined">
 							{{ fmt(amount(item)) }}
 						</div>
@@ -72,7 +73,7 @@
 							:label="item.is_fixed_asset ? 'Asset account' : 'Expense account'"
 							:placeholder="item.default_account || defaultExpense || 'Account'"
 							:description="item.is_fixed_asset ? 'Empty uses the Fixed Asset Account of the company' : 'Empty uses the category, the item group, then the company default'"
-							:filters="{ ...accountFilters, root_type: item.is_fixed_asset ? 'Asset' : 'Expense' }"
+							:filters="lineAccountFilters(item)"
 						/>
 						<FormControl
 							:model-value="item.item_code ? `1 ${item.uom} = ${item.conversion_factor} ${item.stock_uom} · ${stockQty(item)} ${item.stock_uom} in all` : '—'"
@@ -87,17 +88,17 @@
 							v-model:sub-category="item.expense_sub_category"
 							:project="item.project || doc.project"
 							:labels="true"
-							@account="(a) => (item.expense_account = a)"
+							@account="(a) => useCategoryAccount(item, a)"
 						/>
 					</div>
 				</div>
 				<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-					<Button icon-left="lucide-plus" label="Add item" @click="addItem" />
-					<span class="text-base font-semibold tabular-nums">Total {{ fmt(total) }}</span>
+					<Button v-tour="'bill.add_item'" icon-left="lucide-plus" label="Add item" @click="addItem" />
+					<span v-tour="{ key: 'bill.total', value: total }" class="text-base font-semibold tabular-nums">Total {{ fmt(total) }}</span>
 				</div>
 			</fieldset>
 
-			<FormControl v-model="doc.remarks" type="textarea" label="Remarks" />
+			<FormControl v-model="doc.remarks" v-tour="'bill.remarks'" type="textarea" label="Remarks" />
 		</form>
 		<ItemDialog :open="!!creatingFor" @update:open="(v) => !v && (creatingFor = null)" @saved="useCreatedItem" />
 	</div>
@@ -111,11 +112,14 @@ import CategoryFields from "@/components/CategoryFields.vue"
 import ItemDialog from "@/components/ItemDialog.vue"
 import LinkField from "@/components/LinkField.vue"
 import PageHeader from "@/components/PageHeader.vue"
-import { api, getDoc, insertDoc } from "@/api"
+import { api, getAllowedAccounts, getDoc, insertDoc, pickAllowedAccount } from "@/api"
 import { addDays, money, today } from "@/format"
 import { can, currency, needsApproval, session, submitOrSend } from "@/store"
 
 const PAYMENT_TERMS_DAYS = 30
+
+/** Training keys of a line's fields: `bill.qty` on the first line, `bill.qty.2` on the second. */
+const lineKey = (field: string, i: number) => (i ? `bill.${field}.${i + 1}` : `bill.${field}`)
 
 const route = useRoute()
 const router = useRouter()
@@ -140,6 +144,8 @@ const creatingFor = ref<Line | null>(null)
 const projectFilters = computed(() => ({ company: session.company, status: "Open" }))
 const accountFilters = computed(() => ({ company: session.company, is_group: 0, disabled: 0 }))
 const total = computed(() => items.reduce((t, item) => t + amount(item), 0))
+// expenses go only to the accounts with budget on the line's project, else on its cost center
+const accountsFor = reactive<Record<string, string[] | null>>({})
 
 type Line = ReturnType<typeof newItem>
 
@@ -179,7 +185,7 @@ function lineSummary(item: Line) {
 async function setItem(item: Line, code: string) {
 	item.item_code = code
 	if (!code) return
-	const d = await api("spend.spend.doctype.item.item.get_item_details", { item_code: code, company: session.company, supplier: doc.supplier || undefined })
+	const d = await api("spend.purchasing.doctype.item.item.get_item_details", { item_code: code, company: session.company, supplier: doc.supplier || undefined })
 	Object.assign(item, {
 		description: d.description || "",
 		uom: d.uom,
@@ -198,7 +204,7 @@ async function setItem(item: Line, code: string) {
 // a new unit keeps the price of the default unit
 async function setUom(item: Line, uom: string) {
 	if (!uom || uom === item.uom) return
-	const { conversion_factor } = await api("spend.spend.doctype.item.item.get_uom_details", { item_code: item.item_code, uom })
+	const { conversion_factor } = await api("spend.purchasing.doctype.item.item.get_uom_details", { item_code: item.item_code, uom })
 	if (item.rate !== "") item.rate = Math.round((Number(item.rate) / item.conversion_factor) * conversion_factor * 100) / 100
 	Object.assign(item, { uom, conversion_factor })
 }
@@ -220,6 +226,42 @@ async function useProjectCostCenter() {
 }
 
 watch(() => doc.project, useProjectCostCenter)
+
+function lineScope(item: Line) {
+	return { project: item.project || doc.project, cost_center: item.cost_center || doc.cost_center, posting_date: doc.posting_date }
+}
+
+const scopeKey = (scope: ReturnType<typeof lineScope>) => (scope.project ? `project:${scope.project}` : scope.cost_center ? `${scope.cost_center}|${scope.posting_date}` : "")
+
+function allowedAccounts(item: Line) {
+	const key = scopeKey(lineScope(item))
+	return !item.is_fixed_asset && key ? accountsFor[key] : undefined
+}
+
+function lineAccountFilters(item: Line) {
+	const allowed = allowedAccounts(item)
+	if (allowed) return { company: session.company, name: ["in", allowed] }
+	return { ...accountFilters.value, root_type: item.is_fixed_asset ? "Asset" : "Expense" }
+}
+
+function useCategoryAccount(item: Line, account: string) {
+	item.expense_account = pickAllowedAccount(account, allowedAccounts(item))
+}
+
+watch(
+	() => items.map((item) => scopeKey(lineScope(item))),
+	async () => {
+		for (const item of items) {
+			const scope = lineScope(item)
+			const key = scopeKey(scope)
+			if (key && !(key in accountsFor)) accountsFor[key] = await getAllowedAccounts(session.company, scope)
+		}
+		for (const item of items) {
+			if (item.expense_account) item.expense_account = pickAllowedAccount(item.expense_account, allowedAccounts(item))
+		}
+	},
+	{ immediate: true },
+)
 
 watch(
 	() => doc.posting_date,

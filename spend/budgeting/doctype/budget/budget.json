@@ -1,0 +1,214 @@
+{
+ "actions": [],
+ "autoname": "format:BUD-{fiscal_year}-{####}",
+ "creation": "2026-10-26 15:52:25.674766",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_npef",
+  "company",
+  "workflow_state",
+  "fiscal_year",
+  "cost_center",
+  "column_break_1",
+  "budget_period",
+  "action_if_exceeded",
+  "currency",
+  "section_break_accounts",
+  "accounts",
+  "total_budget",
+  "section_break_monthly",
+  "monthly_distribution",
+  "amended_from",
+  "amendment_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_npef",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "fiscal_year",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Fiscal Year",
+   "options": "Fiscal Year",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Cost Center",
+   "options": "Cost Center",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Annual",
+   "fieldname": "budget_period",
+   "fieldtype": "Select",
+   "label": "Budget Period",
+   "options": "Annual\nMonthly",
+   "reqd": 1
+  },
+  {
+   "default": "Warn",
+   "description": "Checked when an expense is posted against this cost center",
+   "fieldname": "action_if_exceeded",
+   "fieldtype": "Select",
+   "label": "Action if Budget Exceeded",
+   "options": "Warn\nStop\nIgnore",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "company.default_currency",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_accounts",
+   "fieldtype": "Section Break",
+   "label": "Budget Accounts"
+  },
+  {
+   "fieldname": "accounts",
+   "fieldtype": "Table",
+   "label": "Accounts",
+   "options": "Budget Account",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_budget",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Budget",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.budget_period=='Monthly'",
+   "description": "Share of the annual budget for each month. Filled evenly from the fiscal year when empty.",
+   "fieldname": "section_break_monthly",
+   "fieldtype": "Section Break",
+   "label": "Monthly Distribution"
+  },
+  {
+   "fieldname": "monthly_distribution",
+   "fieldtype": "Table",
+   "label": "Monthly Distribution",
+   "options": "Budget Period"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Budget",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "depends_on": "amended_from",
+   "fieldname": "amendment_reason",
+   "fieldtype": "Small Text",
+   "label": "Reason for Amendment",
+   "mandatory_depends_on": "amended_from",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Approval Status",
+   "no_copy": 1,
+   "options": "Workflow State",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Project",
+   "link_fieldname": "budget"
+  }
+ ],
+ "modified": "2026-10-27 19:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Budgeting",
+ "name": "Budget",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "General Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

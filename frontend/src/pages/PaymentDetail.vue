@@ -4,7 +4,7 @@
 		<PageHeader :title="payment.supplier" :subtitle="`${payment.name} · ${date(payment.posting_date)}`" :back="{ to: '/payments', label: 'Payments' }">
 			<template #badge><StatusBadge :status="docstatusLabel(payment.docstatus)" /></template>
 			<template #actions>
-				<Button label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
+				<Button v-if="deskAccess" label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
 				<Button
 					v-if="payment.docstatus === 1"
 					label="Ledger"
@@ -16,30 +16,38 @@
 			</template>
 		</PageHeader>
 
-		<div class="space-y-6 p-4 sm:p-6">
-			<ApprovalBar doctype="Supplier Payment" :name="name" @changed="load" />
+		<DocLayout doctype="Supplier Payment" :name="name" :version="payment.modified">
+			<div class="space-y-6">
+				<ApprovalBar doctype="Supplier Payment" :name="name" @changed="load" />
 
-			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-				<StatCard label="Paid" :value="fmt(payment.paid_amount)" :hint="payment.mode_of_payment" />
-				<StatCard label="Allocated to bills" :value="fmt(payment.total_allocated)" :hint="`${payment.references.length} bills`" />
-				<StatCard label="Paid from" :value="payment.paid_from" />
-				<StatCard label="Reference" :value="payment.reference_no || '—'" :hint="payment.reference_date ? date(payment.reference_date) : ''" />
+				<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+					<StatCard label="Paid" :value="fmt(payment.paid_amount)" :hint="payment.mode_of_payment" />
+					<StatCard label="Allocated to bills" :value="fmt(payment.total_allocated)" :hint="`${payment.references.length} bills`" />
+					<StatCard label="Paid from" :value="payment.paid_from" />
+					<StatCard label="Reference" :value="payment.reference_no || '—'" :hint="payment.reference_date ? date(payment.reference_date) : ''" />
+				</div>
+
+				<section class="rounded-xl border border-outline-gray-1">
+					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills paid</h2>
+					<DataTable class="mt-2" :columns="columns" :rows="payment.references" clickable @row-click="(r) => $router.push(`/bills/${r.purchase_invoice}`)" />
+				</section>
+
+				<section class="rounded-xl border border-outline-gray-1 p-4">
+					<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+						<dt class="text-ink-gray-5">Supplier</dt>
+						<dd class="text-right text-ink-gray-8">
+							<RouterLink :to="`/suppliers/${encodeURIComponent(payment.supplier)}`" class="hover:underline">{{ payment.supplier }}</RouterLink>
+						</dd>
+						<dt class="text-ink-gray-5">Supplier pending balance</dt>
+						<dd class="text-right" :class="(supplierBalance ?? 0) > 0 ? 'text-ink-amber-4' : 'text-ink-gray-8'">{{ supplierBalance === null ? "—" : fmt(supplierBalance) }}</dd>
+						<dt class="text-ink-gray-5">Project</dt>
+						<dd class="text-right text-ink-gray-8">{{ payment.project || "—" }}</dd>
+						<dt class="text-ink-gray-5">Remarks</dt>
+						<dd class="whitespace-pre-line text-right text-ink-gray-8">{{ payment.remarks || "—" }}</dd>
+					</dl>
+				</section>
 			</div>
-
-			<section class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills paid</h2>
-				<DataTable class="mt-2" :columns="columns" :rows="payment.references" clickable @row-click="(r) => $router.push(`/bills/${r.purchase_invoice}`)" />
-			</section>
-
-			<section v-if="payment.project || payment.remarks" class="rounded-xl border border-outline-gray-1 p-4">
-				<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-					<dt class="text-ink-gray-5">Project</dt>
-					<dd class="text-right text-ink-gray-8">{{ payment.project || "—" }}</dd>
-					<dt class="text-ink-gray-5">Remarks</dt>
-					<dd class="whitespace-pre-line text-right text-ink-gray-8">{{ payment.remarks || "—" }}</dd>
-				</dl>
-			</section>
-		</div>
+		</DocLayout>
 	</div>
 </template>
 
@@ -48,18 +56,20 @@ import { onMounted, ref } from "vue"
 import { Button, dialog, LoadingText, toast } from "frappe-ui"
 import ApprovalBar from "@/components/ApprovalBar.vue"
 import DataTable, { type Column } from "@/components/DataTable.vue"
+import DocLayout from "@/components/DocLayout.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import StatCard from "@/components/StatCard.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
-import { getDoc, submitDoc } from "@/api"
+import { api, getDoc, submitDoc } from "@/api"
 import { confirmCancelPayment } from "@/payments"
 import { date, docstatusLabel, money } from "@/format"
-import { can, currency, needsApproval } from "@/store"
+import { can, currency, deskAccess, needsApproval } from "@/store"
 
 const props = defineProps<{ name: string }>()
 
 const payment = ref<any>(null)
 const busy = ref(false)
+const supplierBalance = ref<number | null>(null)
 const fmt = (v: number) => money(v, payment.value?.currency || currency.value)
 
 const columns: Column[] = [
@@ -71,6 +81,10 @@ const columns: Column[] = [
 
 async function load() {
 	payment.value = await getDoc("Supplier Payment", props.name)
+	supplierBalance.value = await api<number>("spend.purchasing.doctype.supplier.supplier.get_outstanding", {
+		supplier: payment.value.supplier,
+		company: payment.value.company,
+	})
 }
 
 async function run(action: () => Promise<any>, message: string) {

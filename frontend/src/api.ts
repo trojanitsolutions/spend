@@ -129,7 +129,7 @@ export interface BudgetAllocation {
 }
 
 export function getBudgetAllocation(budget: string, project?: string) {
-	return api<BudgetAllocation>("spend.spend.doctype.project.project.get_budget_allocation", { budget, project })
+	return api<BudgetAllocation>("spend.projects.doctype.project.project.get_budget_allocation", { budget, project })
 }
 
 // what a recurring payment can take: the Budget's free amounts, or what is left of the project's share
@@ -153,8 +153,27 @@ export interface RecurringRoom {
 	free: number | null
 }
 
+// the expense accounts a line books to: its project's, else those budgeted on its cost center; null without either
+export function getAllowedAccounts(company: string, line: { project?: string; cost_center?: string; posting_date?: string }) {
+	return api<string[] | null>("spend.projects.doctype.project.project.get_allowed_accounts", {
+		company,
+		project: line.project || undefined,
+		cost_center: line.cost_center || undefined,
+		posting_date: line.posting_date || undefined,
+	})
+}
+
+// account search for booking lines: budgeted expense accounts and, unless expense_only, every other ledger
+export const BOOKING_ACCOUNT_QUERY = "spend.projects.doctype.project.project.search_booking_accounts"
+
+/** The account a category suggests if it is allowed, else the only allowed one, else none. */
+export function pickAllowedAccount(account: string, allowed: string[] | null | undefined) {
+	if (!allowed || allowed.includes(account)) return account
+	return allowed.length === 1 ? allowed[0] : ""
+}
+
 export function getRecurringRoom(budget?: string, project?: string, silent = false) {
-	return api<RecurringRoom | null>("spend.spend.doctype.recurring_payment.recurring_payment.get_recurring_room", { budget, project }, { silent })
+	return api<RecurringRoom | null>("spend.purchasing.doctype.recurring_payment.recurring_payment.get_recurring_room", { budget, project }, { silent })
 }
 
 export function runReport(reportName: string, filters: Row): Promise<ReportResult> {
@@ -176,7 +195,7 @@ export function searchLink(doctype: string, txt: string, filters: Row = {}, quer
 }
 
 // parent categories, or the sub categories of `parent_category`; limited to a project's categories when it has any
-export const CATEGORY_QUERY = "spend.spend.doctype.expense_category.expense_category.get_categories"
+export const CATEGORY_QUERY = "spend.projects.doctype.expense_category.expense_category.get_categories"
 
 export function getCategoryAccount(category?: string, subCategory?: string) {
 	return api<string | null>("spend.spend.expense_category.get_category_account", { category, sub_category: subCategory }, { silent: true }).catch(() => null)
@@ -185,4 +204,38 @@ export function getCategoryAccount(category?: string, subCategory?: string) {
 /** "Materials - N / Cement - N" for a category and its sub category. */
 export function categoryLabel(category?: string | null, subCategory?: string | null) {
 	return [category, subCategory].filter(Boolean).join(" / ")
+}
+
+export interface Attachment {
+	name: string
+	file_name: string
+	file_url: string
+	file_size: number
+	is_private: 0 | 1
+	owner_name: string
+	creation: string
+	can_remove: boolean
+}
+
+export interface ActivityEntry {
+	type: string
+	user: string
+	full_name: string
+	creation: string
+	text: string
+	mentions?: { user: string; full_name: string }[]
+}
+
+export interface MentionableUser {
+	user: string
+	full_name: string
+	user_image?: string
+}
+
+export function getMentionableUsers(doctype: string, name: string) {
+	return api<MentionableUser[]>("spend.spend.activity.get_mentionable_users", { doctype, name })
+}
+
+export function getActivity(doctype: string, name: string) {
+	return api<{ attachments: Attachment[]; timeline: ActivityEntry[] }>("spend.spend.activity.get_activity", { doctype, name })
 }

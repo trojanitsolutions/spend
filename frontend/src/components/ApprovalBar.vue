@@ -13,6 +13,7 @@
 				<Button
 					v-for="action in info.actions"
 					:key="action"
+					v-tour="`approval.${action.toLowerCase().replaceAll(' ', '_')}`"
 					:label="action"
 					:variant="action === APPROVAL.reject || action === APPROVAL.revise ? 'subtle' : 'solid'"
 					:theme="action === APPROVAL.reject ? 'red' : 'gray'"
@@ -21,17 +22,6 @@
 				/>
 			</div>
 		</div>
-
-		<ol v-if="info.history.length" class="mt-4 space-y-2 border-t border-outline-gray-1 pt-3">
-			<li v-for="(h, i) in info.history" :key="i" class="flex gap-2 text-sm">
-				<span :class="[h.type === 'Workflow' ? 'lucide-circle-check' : 'lucide-message-square', 'mt-0.5 size-4 shrink-0 text-ink-gray-5']" aria-hidden="true" />
-				<div class="min-w-0">
-					<span class="font-medium text-ink-gray-8">{{ h.full_name }}</span>
-					<span class="text-ink-gray-6"> · {{ h.type === "Workflow" ? `moved to ${h.content}` : h.content }}</span>
-					<div class="text-xs text-ink-gray-5">{{ when(h.creation) }}</div>
-				</div>
-			</li>
-		</ol>
 
 		<Dialog v-model:open="rejecting" title="Reject" :actions="[{ label: 'Reject', variant: 'solid', theme: 'red', onClick: reject }]">
 			<FormControl v-model="reason" type="textarea" label="Reason" required placeholder="What needs to change?" />
@@ -48,7 +38,6 @@ import { api, applyAction, APPROVAL } from "@/api"
 interface ApprovalInfo {
 	state: string
 	actions: string[]
-	history: { type: string; content: string; full_name: string; creation: string }[]
 }
 
 const props = defineProps<{ doctype: string; name: string }>()
@@ -60,10 +49,9 @@ const rejecting = ref(false)
 const reason = ref("")
 
 const HINTS: Record<string, string> = {
-	Draft: "Send it for approval when it is ready. An Accounts Manager approves first, then the General Manager.",
-	"Pending Manager Approval": "Waiting for an Accounts Manager.",
-	"Pending GM Approval": "Approved by an Accounts Manager. Waiting for the General Manager.",
-	Approved: "Approved by an Accounts Manager and the General Manager.",
+	Draft: "Send it to the General Manager for approval when it is ready.",
+	"Pending GM Approval": "Waiting for the General Manager.",
+	Approved: "Approved by the General Manager.",
 	Rejected: "Rejected. Make the changes, then resubmit it.",
 	Cancelled: "Cancelled after approval.",
 }
@@ -105,10 +93,6 @@ async function reject() {
 	} finally {
 		busy.value = ""
 	}
-}
-
-function when(value: string) {
-	return new Date(value.replace(" ", "T")).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
 }
 
 defineExpose({ load })

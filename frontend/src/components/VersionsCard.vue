@@ -68,7 +68,7 @@ const banner = computed(() => {
 	}
 	if (previous.value) {
 		return {
-			tone: "bg-surface-blue-1 text-ink-blue-4",
+			tone: "bg-surface-blue-1 text-ink-blue-8",
 			icon: "lucide-git-branch",
 			text: "Amends",
 			link: { to: routeOf(previous.value), label: previous.value.name },

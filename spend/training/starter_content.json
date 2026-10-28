@@ -1,0 +1,147 @@
+{
+	"tracks": [
+		{
+			"title": "Spend Basics",
+			"sequence": 1,
+			"description": "Find your way around Spend and record your first supplier bill.",
+			"roles": ["Accounts Manager"]
+		}
+	],
+	"scenarios": [
+		{
+			"title": "Find your way around",
+			"track": "Spend Basics",
+			"sequence": 1,
+			"difficulty": "Beginner",
+			"passing_score": 70,
+			"start_route": "/",
+			"description": "A short walk through the sidebar: where expenses, bills and reports live.",
+			"steps": [
+				{
+					"title": "Welcome to Spend",
+					"route": "/",
+					"target": "shell.company",
+					"action_type": "Observe",
+					"body": "<p>Everything in Spend belongs to the company picked here. During training you work in the <b>Spend Training</b> company, so nothing reaches your real books.</p>"
+				},
+				{
+					"title": "Open Expenses",
+					"route": "/",
+					"target": "nav.expenses",
+					"action_type": "Click",
+					"body": "<p>Expenses are money spent without a supplier bill, such as petty cash. Click <b>Expenses</b>.</p>",
+					"hint": "It's in the sidebar, under Accounts."
+				},
+				{
+					"title": "Open Bills",
+					"route": "/expenses",
+					"target": "nav.bills",
+					"action_type": "Click",
+					"body": "<p>Bills are invoices from suppliers that you pay later. Click <b>Bills</b>.</p>",
+					"hint": "It's in the sidebar, under Purchasing."
+				},
+				{
+					"title": "Open Reports",
+					"route": "/bills",
+					"target": "nav.reports",
+					"action_type": "Click",
+					"body": "<p>Reports show spending by account, cost center and project. Click <b>Reports</b>.</p>",
+					"hint": "It's at the bottom of the sidebar, under Setup."
+				}
+			],
+			"quiz": [
+				{
+					"question": "Where do you record an invoice a supplier sent you?",
+					"options": "Expenses\nBills\nJournal Entries",
+					"correct_option": "Bills",
+					"explanation": "Bills track what you owe a supplier until you pay it."
+				}
+			]
+		},
+		{
+			"title": "Record a supplier bill",
+			"track": "Spend Basics",
+			"sequence": 2,
+			"difficulty": "Beginner",
+			"passing_score": 70,
+			"start_route": "/bills",
+			"description": "Record a bill from Acme Stationers for 10 reams of printer paper and save it as a draft.",
+			"seed_data": {
+				"Supplier": [{"supplier_name": "Acme Stationers"}],
+				"Item": [{"item_code": "PAPER-A4", "item_name": "Printer Paper A4", "stock_uom": "Nos"}]
+			},
+			"steps": [
+				{
+					"title": "Start a new bill",
+					"route": "/bills",
+					"target": "bills.new",
+					"action_type": "Click",
+					"body": "<p>Acme Stationers sent an invoice for printer paper. Click <b>New Bill</b>.</p>"
+				},
+				{
+					"title": "Pick the supplier",
+					"route": "/bills/new",
+					"target": "bill.supplier",
+					"action_type": "Select Option",
+					"expected_value": "Acme Stationers",
+					"body": "<p>Pick <b>Acme Stationers</b> as the supplier.</p>",
+					"hint": "Type 'Acme' and pick it from the list."
+				},
+				{
+					"title": "Enter the invoice number",
+					"route": "/bills/new",
+					"target": "bill.bill_no",
+					"action_type": "Enter Value",
+					"body": "<p>Type the number printed on the supplier's invoice, for example <b>INV-1001</b>. It helps find the bill later.</p>"
+				},
+				{
+					"title": "Pick the item",
+					"route": "/bills/new",
+					"target": "bill.item",
+					"action_type": "Select Option",
+					"expected_value": "PAPER-A4",
+					"body": "<p>Pick <b>Printer Paper A4</b>.</p>",
+					"hint": "Type 'paper' in the Item field."
+				},
+				{
+					"title": "Enter the quantity",
+					"route": "/bills/new",
+					"target": "bill.qty",
+					"action_type": "Enter Value",
+					"expected_value": "10",
+					"body": "<p>The invoice is for <b>10</b> reams.</p>"
+				},
+				{
+					"title": "Enter the rate",
+					"route": "/bills/new",
+					"target": "bill.rate",
+					"action_type": "Enter Value",
+					"expected_value": "250",
+					"body": "<p>Each ream costs <b>250</b>.</p>"
+				},
+				{
+					"title": "Check the total",
+					"route": "/bills/new",
+					"target": "bill.total",
+					"action_type": "Observe",
+					"body": "<p>Spend works out the total for you: 10 × 250 = 2,500.</p>"
+				},
+				{
+					"title": "Save the draft",
+					"route": "/bills/new",
+					"target": "bill.save_draft",
+					"action_type": "Click",
+					"body": "<p>Click <b>Save Draft</b>. A draft doesn't post to the ledger yet, so it can still be changed.</p>"
+				}
+			],
+			"quiz": [
+				{
+					"question": "Does a draft bill post to the ledger?",
+					"options": "Yes, as soon as it is saved\nNo, only when it is submitted",
+					"correct_option": "No, only when it is submitted",
+					"explanation": "Drafts can be changed freely. Submitting (or approval) posts the bill."
+				}
+			]
+		}
+	]
+}

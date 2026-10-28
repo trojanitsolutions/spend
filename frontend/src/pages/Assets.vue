@@ -56,6 +56,7 @@ const STATUSES = ["All", "Draft", "Submitted", "Partially Depreciated", "Fully D
 const FILTERS: FilterField[] = [
 	{ key: "available_for_use_date", label: "Capitalized", type: "date-range" },
 	{ key: "cost_center", label: "Cost center", type: "link", doctype: "Cost Center", filters: { company: session.company, is_group: 0 } },
+	{ key: "project", label: "Project", type: "link", doctype: "Project", filters: { company: session.company } },
 ]
 
 const filters = useListFilters(FILTERS)

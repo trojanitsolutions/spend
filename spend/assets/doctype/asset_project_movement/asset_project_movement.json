@@ -1,0 +1,77 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-10-28 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "from_project",
+  "to_project",
+  "moved_by",
+  "reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date",
+   "read_only": 1,
+   "columns": 2,
+   "reqd": 1
+  },
+  {
+   "fieldname": "from_project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "From Project",
+   "read_only": 1,
+   "columns": 2,
+   "options": "Project",
+   "search_index": 1
+  },
+  {
+   "fieldname": "to_project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "To Project",
+   "read_only": 1,
+   "columns": 2,
+   "options": "Project",
+   "search_index": 1
+  },
+  {
+   "fieldname": "moved_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Moved By",
+   "read_only": 1,
+   "columns": 2,
+   "options": "User"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Reason",
+   "read_only": 1,
+   "columns": 2
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-28 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Assets",
+ "name": "Asset Project Movement",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

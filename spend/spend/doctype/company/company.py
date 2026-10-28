@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 
 from spend.spend.accounting import validate_company_link, validate_ledger_account
+from spend.training.sandbox import validate_company as validate_training_company
 
 # (account fieldname on Company, allowed root types)
 DEFAULT_ACCOUNT_FIELDS = {
@@ -25,6 +26,7 @@ class Company(Document):
 			frappe.throw(_("Abbreviation is mandatory"))
 		if not self.is_new():
 			self.validate_default_accounts()
+			validate_training_company(self)
 
 	def validate_default_accounts(self):
 		for fieldname, root_types in DEFAULT_ACCOUNT_FIELDS.items():

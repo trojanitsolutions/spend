@@ -38,15 +38,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow State",
-  "icon": null,
-  "modified": "2026-10-27 09:36:07.169515",
-  "name": "Pending Manager Approval",
-  "style": "Warning",
-  "workflow_state_name": "Pending Manager Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
   "icon": "ok-sign",
   "modified": "2026-10-26 16:30:32.811229",
   "name": "Approved",

@@ -14,6 +14,7 @@
   "tax_id",
   "date_of_incorporation",
   "default_fiscal_year",
+  "is_training",
   "section_break_coa",
   "create_default_accounts",
   "section_break_defaults",
@@ -79,6 +80,14 @@
    "fieldtype": "Link",
    "label": "Default Fiscal Year",
    "options": "Fiscal Year"
+  },
+  {
+   "default": "0",
+   "description": "Used by Training. Trainees practise here, and a trainer can wipe its documents.",
+   "fieldname": "is_training",
+   "fieldtype": "Check",
+   "label": "Is Training",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_coa",
@@ -149,7 +158,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-26 18:00:00.000000",
+ "modified": "2026-10-28 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "spend",
  "name": "Company",
@@ -179,13 +188,6 @@
    "role": "Accounts Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "Accounts User"
   }
  ],
  "quick_entry": 0,

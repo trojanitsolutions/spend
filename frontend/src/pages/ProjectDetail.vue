@@ -4,7 +4,7 @@
 		<PageHeader :title="project.project_name" :subtitle="subtitle" :back="{ to: '/projects', label: 'Projects' }">
 			<template #badge><StatusBadge :status="project.status" /></template>
 			<template #actions>
-				<Button label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
+				<Button v-if="deskAccess" label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
 				<template v-if="detail.can_write">
 					<Button
 						v-if="project.status === 'Open'"
@@ -32,186 +32,265 @@
 			</template>
 		</PageHeader>
 
-		<div class="space-y-6 p-4 sm:p-6">
-			<ApprovalBar doctype="Project" :name="name" @changed="load" />
-			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-				<StatCard label="Budget" :value="project.budget_amount ? fmt(project.budget_amount) : 'No limit'" :hint="project.budget ? `Share of ${project.budget} · ${project.action_if_exceeded} when exceeded` : `${project.action_if_exceeded} when exceeded`" />
-				<StatCard label="Spent" :value="fmt(detail.spent)" :hint="detail.utilization !== null ? `${percent(detail.utilization)} of budget` : 'Expenses booked to the project'" />
-				<StatCard
-					label="Remaining"
-					:value="detail.remaining === null ? '—' : fmt(detail.remaining)"
-					:tone="detail.remaining !== null && detail.remaining < 0 ? 'red' : undefined"
-				/>
-				<StatCard label="Owed to suppliers" :value="fmt(detail.outstanding)" :hint="`${fmt(detail.paid)} paid of ${fmt(detail.billed)} billed`" />
-			</div>
-
-			<section v-if="detail.utilization !== null" class="rounded-xl border border-outline-gray-1 p-4">
-				<UsageBar :value="detail.utilization" label="Budget used" :caption="`${fmt(detail.spent)} / ${fmt(project.budget_amount)}`" />
-			</section>
-
-			<section v-if="detail.tasks.length || canAddTask" class="rounded-xl border border-outline-gray-1">
-				<div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6">
-					<div>
-						<h2 class="text-base font-semibold">Tasks</h2>
-						<p class="text-sm text-ink-gray-5">
-							<template v-if="detail.tasks.length">{{ detail.tasks.length - detail.open_tasks }} of {{ detail.tasks.length }} done · the project can be completed when every task is completed or cancelled</template>
-							<template v-else>Add tasks to track the work. The project can be completed when all are done.</template>
-						</p>
-					</div>
-					<div class="flex items-center gap-3">
-						<div v-if="detail.tasks.length" class="w-36"><UsageBar :value="project.percent_complete || 0" :caption="percent(project.percent_complete || 0)" /></div>
-						<Button v-if="canAddTask" variant="ghost" icon-left="lucide-plus" label="New Task" @click="openTask()" />
-					</div>
-				</div>
-				<TreeTable
-					v-if="detail.tasks.length"
-					class="mt-2"
-					:rows="taskRows"
-					name-field="name"
-					name-label="Task"
-					parent-field="parent_task"
-					:collapsed="collapsedTasks"
-					:label="(r) => r.subject"
-					:columns="taskColumns"
-					clickable
-					@row-click="(r: any) => openTask(r.name)"
-					@toggle="toggleTask"
-				>
-					<template #status="{ value }"><StatusBadge :status="value" /></template>
-					<template #actions="{ row }">
-						<Button
-							v-if="can('Task', 'write') && !['Completed', 'Cancelled'].includes(row.status) && !row.is_group"
-							size="sm"
-							variant="ghost"
-							icon-left="lucide-check"
-							label="Done"
-							@click.stop="completeTask(row.name)"
-						/>
-					</template>
-				</TreeTable>
-				<div v-else class="h-4" />
-				<CompleteTaskDialog v-model:open="completeOpen" :tasks="completing" @done="load" />
-			</section>
-
-			<section v-if="detail.accounts.length" class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Account limits</h2>
-				<DataTable class="mt-2" row-key="account" :columns="accountColumns" :rows="detail.accounts">
-					<template #account="{ row }">
-						<span class="tabular-nums text-ink-gray-5">{{ row.account_number }}</span>
-						<span class="ml-1">{{ row.account }}</span>
-					</template>
-					<template #utilization="{ value }"><div class="w-36"><UsageBar :value="value" :caption="percent(value)" /></div></template>
-					<template #remaining="{ value }"><span :class="value < 0 ? 'text-ink-red-4' : ''">{{ fmt(value) }}</span></template>
-				</DataTable>
-			</section>
-
-			<section v-if="detail.categories.length" class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Expense categories</h2>
-				<DataTable class="mt-2" :row-key="'key'" :columns="categoryColumns" :rows="categoryRows">
-					<template #category="{ row }">
-						<span class="text-ink-gray-9">{{ row.category }}</span>
-						<span v-if="row.sub_category" class="text-ink-gray-6"> / {{ row.sub_category }}</span>
-					</template>
-					<template #utilization="{ value }">
-						<div v-if="value !== null" class="w-36"><UsageBar :value="value" :caption="percent(value)" /></div>
-						<span v-else class="text-ink-gray-5">No limit</span>
-					</template>
-					<template #remaining="{ value }"><span :class="value !== null && value < 0 ? 'text-ink-red-4' : ''">{{ value === null ? "—" : fmt(value) }}</span></template>
-				</DataTable>
-			</section>
-
-			<section v-if="detail.monthly.rows.length" class="rounded-xl border border-outline-gray-1">
-				<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
-					<h2 class="text-base font-semibold">Charged each month by category</h2>
-					<Button variant="ghost" icon-left="lucide-chart-column" label="Full report" @click="$router.push({ path: '/reports/project-category-monthly', query: { project: project.name } })" />
-				</div>
-				<div class="mt-2 overflow-x-auto">
-					<table class="w-full text-sm">
-						<thead>
-							<tr class="border-b border-outline-gray-1 text-left text-ink-gray-5">
-								<th class="sticky left-0 bg-surface-white px-4 py-2 font-normal sm:px-6">Category</th>
-								<th v-for="month in detail.monthly.months" :key="month" class="whitespace-nowrap px-3 py-2 text-right font-normal">{{ monthLabel(month) }}</th>
-								<th class="px-4 py-2 text-right font-normal sm:pr-6">Total</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="row in detail.monthly.rows" :key="`${row.category}|${row.sub_category || ''}`" class="border-b border-outline-gray-1 last:border-0">
-								<td class="sticky left-0 whitespace-nowrap bg-surface-white px-4 py-2 sm:px-6" :class="row.indent ? 'pl-8 text-ink-gray-6 sm:pl-10' : 'font-medium text-ink-gray-9'">
-									{{ row.sub_category || row.category }}
-								</td>
-								<td v-for="month in detail.monthly.months" :key="month" class="px-3 py-2 text-right tabular-nums" :class="row.months[month] ? 'text-ink-gray-8' : 'text-ink-gray-4'">
-									{{ row.months[month] ? fmt(row.months[month]) : "—" }}
-								</td>
-								<td class="px-4 py-2 text-right font-medium tabular-nums text-ink-gray-9 sm:pr-6">{{ fmt(row.total) }}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</section>
-
-			<section class="rounded-xl border border-outline-gray-1">
-				<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills</h2>
-				<DataTable class="mt-2" :columns="billColumns" :rows="detail.bills" clickable empty-text="No bills for this project yet" @row-click="(r) => $router.push(`/bills/${r.name}`)">
-					<template #supplier="{ row }">
-						<div class="font-medium text-ink-gray-9">{{ row.supplier }}</div>
-						<div class="text-sm text-ink-gray-5">{{ row.name }}<template v-if="row.bill_no"> · {{ row.bill_no }}</template></div>
-					</template>
-					<template #status="{ value }"><StatusBadge :status="value" /></template>
-				</DataTable>
-			</section>
-
-			<section v-if="detail.recurring.length || can('Recurring Payment', 'create')" class="rounded-xl border border-outline-gray-1">
-				<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
-					<h2 class="text-base font-semibold">Recurring payments</h2>
-					<Button
-						v-if="project.status === 'Open' && can('Recurring Payment', 'create')"
-						variant="ghost"
-						icon-left="lucide-plus"
-						label="New"
-						@click="$router.push({ path: '/recurring/new', query: { project: project.name } })"
+		<DocLayout doctype="Project" :name="name" :version="project.modified">
+			<div class="space-y-6">
+				<ApprovalBar doctype="Project" :name="name" @changed="load" />
+				<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+					<StatCard label="Budget" :value="project.budget_amount ? fmt(project.budget_amount) : 'No limit'" :hint="project.budget ? `Share of ${project.budget} · ${project.action_if_exceeded} when exceeded` : `${project.action_if_exceeded} when exceeded`" />
+					<StatCard label="Spent" :value="fmt(detail.spent)" :hint="detail.utilization !== null ? `${percent(detail.utilization)} of budget` : 'Expenses booked to the project'" />
+					<StatCard
+						label="Remaining"
+						:value="detail.remaining === null ? '—' : fmt(detail.remaining)"
+						:tone="detail.remaining !== null && detail.remaining < 0 ? 'red' : undefined"
 					/>
+					<StatCard label="Owed to suppliers" :value="fmt(detail.outstanding)" :hint="`${fmt(detail.paid)} paid of ${fmt(detail.billed)} billed`" />
 				</div>
-				<DataTable class="mt-2" :columns="recurringColumns" :rows="detail.recurring" clickable empty-text="No recurring payments for this project" @row-click="(r) => $router.push(`/recurring/${r.name}`)">
-					<template #title="{ row }">
-						<div class="font-medium text-ink-gray-9">{{ row.title }}</div>
-						<div class="text-sm text-ink-gray-5">{{ row.name }} · {{ row.frequency }}</div>
-					</template>
-					<template #status="{ value }"><StatusBadge :status="value" /></template>
-				</DataTable>
-			</section>
 
-			<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-				<section class="rounded-xl border border-outline-gray-1 p-4">
-					<h2 class="mb-3 text-base font-semibold">Details</h2>
-					<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-						<template v-for="[label, value] in details" :key="label">
-							<dt class="text-ink-gray-5">{{ label }}</dt>
-							<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">
-								<RouterLink v-if="label === 'Budget' && value" :to="`/budgets/${value}`" class="hover:underline">{{ value }}</RouterLink>
-								<template v-else>{{ value || "—" }}</template>
-							</dd>
-						</template>
-					</dl>
-				</section>
-				<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
-					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
-					<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" empty-text="No payments tagged with this project">
-						<template #name="{ value }"><a :href="`/app/supplier-payment/${value}`" class="hover:underline">{{ value }}</a></template>
-						<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
-					</DataTable>
-				</section>
+				<div class="max-w-full overflow-x-auto"><TabButtons v-model="tab" :options="tabs" /></div>
+
+				<template v-if="tab === 'overview'">
+					<section v-if="detail.utilization !== null" class="rounded-xl border border-outline-gray-1 p-4">
+						<UsageBar :value="detail.utilization" label="Budget used" :caption="`${fmt(detail.spent)} / ${fmt(project.budget_amount)}`" />
+					</section>
+
+					<section v-if="detail.accounts.length" class="rounded-xl border border-outline-gray-1">
+						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Account limits</h2>
+						<DataTable class="mt-2" row-key="account" :columns="accountColumns" :rows="detail.accounts">
+							<template #account="{ row }">
+								<span class="tabular-nums text-ink-gray-5">{{ row.account_number }}</span>
+								<span class="ml-1">{{ row.account }}</span>
+							</template>
+							<template #utilization="{ value }"><div class="w-36"><UsageBar :value="value" :caption="percent(value)" /></div></template>
+							<template #remaining="{ value }"><span :class="value < 0 ? 'text-ink-red-4' : ''">{{ fmt(value) }}</span></template>
+						</DataTable>
+					</section>
+
+					<section v-if="detail.categories.length" class="rounded-xl border border-outline-gray-1">
+						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Expense categories</h2>
+						<DataTable class="mt-2" :row-key="'key'" :columns="categoryColumns" :rows="categoryRows">
+							<template #category="{ row }">
+								<span class="text-ink-gray-9">{{ row.category }}</span>
+								<span v-if="row.sub_category" class="text-ink-gray-6"> / {{ row.sub_category }}</span>
+							</template>
+							<template #utilization="{ value }">
+								<div v-if="value !== null" class="w-36"><UsageBar :value="value" :caption="percent(value)" /></div>
+								<span v-else class="text-ink-gray-5">No limit</span>
+							</template>
+							<template #remaining="{ value }"><span :class="value !== null && value < 0 ? 'text-ink-red-4' : ''">{{ value === null ? "—" : fmt(value) }}</span></template>
+						</DataTable>
+					</section>
+
+					<section v-if="detail.monthly.rows.length" class="rounded-xl border border-outline-gray-1">
+						<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
+							<h2 class="text-base font-semibold">Charged each month by category</h2>
+							<Button variant="ghost" icon-left="lucide-chart-column" label="Full report" @click="$router.push({ path: '/reports/project-category-monthly', query: { project: project.name } })" />
+						</div>
+						<div class="mt-2 overflow-x-auto">
+							<table class="w-full text-sm">
+								<thead>
+									<tr class="border-b border-outline-gray-1 text-left text-ink-gray-5">
+										<th class="sticky left-0 bg-surface-white px-4 py-2 font-normal sm:px-6">Category</th>
+										<th v-for="month in detail.monthly.months" :key="month" class="whitespace-nowrap px-3 py-2 text-right font-normal">{{ monthLabel(month) }}</th>
+										<th class="px-4 py-2 text-right font-normal sm:pr-6">Total</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr v-for="row in detail.monthly.rows" :key="`${row.category}|${row.sub_category || ''}`" class="border-b border-outline-gray-1 last:border-0">
+										<td class="sticky left-0 whitespace-nowrap bg-surface-white px-4 py-2 sm:px-6" :class="row.indent ? 'pl-8 text-ink-gray-6 sm:pl-10' : 'font-medium text-ink-gray-9'">
+											{{ row.sub_category || row.category }}
+										</td>
+										<td v-for="month in detail.monthly.months" :key="month" class="px-3 py-2 text-right tabular-nums" :class="row.months[month] ? 'text-ink-gray-8' : 'text-ink-gray-4'">
+											{{ row.months[month] ? fmt(row.months[month]) : "—" }}
+										</td>
+										<td class="px-4 py-2 text-right font-medium tabular-nums text-ink-gray-9 sm:pr-6">{{ fmt(row.total) }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</section>
+
+					<section class="rounded-xl border border-outline-gray-1 p-4">
+						<h2 class="mb-3 text-base font-semibold">Details</h2>
+						<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+							<template v-for="[label, value] in details" :key="label">
+								<dt class="text-ink-gray-5">{{ label }}</dt>
+								<dd class="whitespace-pre-line break-words text-right text-ink-gray-8">
+									<RouterLink v-if="label === 'Budget' && value" :to="`/budgets/${value}`" class="hover:underline">{{ value }}</RouterLink>
+									<template v-else>{{ value || "—" }}</template>
+								</dd>
+							</template>
+						</dl>
+					</section>
+				</template>
+
+				<template v-else-if="tab === 'tasks'">
+					<section class="rounded-xl border border-outline-gray-1">
+						<div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6">
+							<div>
+								<h2 class="text-base font-semibold">Tasks</h2>
+								<p class="text-sm text-ink-gray-5">
+									<template v-if="detail.tasks.length">{{ detail.tasks.length - detail.open_tasks }} of {{ detail.tasks.length }} done · the project can be completed when every task is completed or cancelled</template>
+									<template v-else>Add tasks to track the work. The project can be completed when all are done.</template>
+								</p>
+							</div>
+							<div class="flex items-center gap-3">
+								<div v-if="detail.tasks.length" class="w-36"><UsageBar :value="project.percent_complete || 0" :caption="percent(project.percent_complete || 0)" /></div>
+								<Button v-if="canAddTask" variant="ghost" icon-left="lucide-plus" label="New Task" @click="openTask()" />
+							</div>
+						</div>
+						<TreeTable
+							v-if="detail.tasks.length"
+							class="mt-2"
+							:rows="taskRows"
+							name-field="name"
+							name-label="Task"
+							parent-field="parent_task"
+							:collapsed="collapsedTasks"
+							:label="(r) => r.subject"
+							:columns="taskColumns"
+							clickable
+							@row-click="(r: any) => openTask(r.name)"
+							@toggle="toggleTask"
+						>
+							<template #status="{ value }"><StatusBadge :status="value" /></template>
+							<template #actions="{ row }">
+								<Button
+									v-if="can('Task', 'write') && !['Completed', 'Cancelled'].includes(row.status) && !row.is_group"
+									size="sm"
+									variant="ghost"
+									icon-left="lucide-check"
+									label="Done"
+									@click.stop="completeTask(row.name)"
+								/>
+							</template>
+						</TreeTable>
+						<div v-else class="h-4" />
+						<CompleteTaskDialog v-model:open="completeOpen" :tasks="completing" @done="load" />
+					</section>
+				</template>
+
+				<template v-else-if="tab === 'bills'">
+					<section class="rounded-xl border border-outline-gray-1">
+						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills</h2>
+						<DataTable class="mt-2" :columns="billColumns" :rows="detail.bills" clickable empty-text="No bills for this project yet" @row-click="(r) => $router.push(`/bills/${r.name}`)">
+							<template #supplier="{ row }">
+								<div class="font-medium text-ink-gray-9">{{ row.supplier }}</div>
+								<div class="text-sm text-ink-gray-5">{{ row.name }}<template v-if="row.bill_no"> · {{ row.bill_no }}</template></div>
+							</template>
+							<template #status="{ value }"><StatusBadge :status="value" /></template>
+							<template #actions="{ row }">
+								<Button
+									v-if="row.docstatus === 1 && row.outstanding_amount > 0 && can('Supplier Payment', 'create')"
+									size="sm"
+									variant="ghost"
+									icon-left="lucide-banknote"
+									label="Pay"
+									@click.stop="payBill(row)"
+								/>
+							</template>
+						</DataTable>
+					</section>
+
+					<section class="rounded-xl border border-outline-gray-1">
+						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
+						<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments tagged with this project" @row-click="(r) => $router.push(`/payments/${r.name}`)">
+							<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
+						</DataTable>
+					</section>
+
+					<section v-if="detail.recurring.length || can('Recurring Payment', 'create')" class="rounded-xl border border-outline-gray-1">
+						<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
+							<h2 class="text-base font-semibold">Recurring payments</h2>
+							<Button
+								v-if="project.status === 'Open' && can('Recurring Payment', 'create')"
+								variant="ghost"
+								icon-left="lucide-plus"
+								label="New"
+								@click="$router.push({ path: '/recurring/new', query: { project: project.name } })"
+							/>
+						</div>
+						<DataTable class="mt-2" :columns="recurringColumns" :rows="detail.recurring" clickable empty-text="No recurring payments for this project" @row-click="(r) => $router.push(`/recurring/${r.name}`)">
+							<template #title="{ row }">
+								<div class="font-medium text-ink-gray-9">{{ row.title }}</div>
+								<div class="text-sm text-ink-gray-5">{{ row.name }} · {{ row.frequency }}</div>
+							</template>
+							<template #status="{ value }"><StatusBadge :status="value" /></template>
+						</DataTable>
+					</section>
+				</template>
+
+				<template v-else-if="tab === 'assets'">
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+						<StatCard label="Gross value" :value="fmt(assetTotal('gross_purchase_amount'))" />
+						<StatCard label="Accumulated depreciation" :value="fmt(assetTotal('accumulated_depreciation'))" hint="Charged to the project" />
+						<StatCard label="Book value" :value="fmt(assetTotal('value_after_depreciation'))" />
+					</div>
+					<section class="rounded-xl border border-outline-gray-1">
+						<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
+							<h2 class="text-base font-semibold">Assets</h2>
+							<div v-if="project.status === 'Open' && usable" class="flex gap-1">
+								<Button v-if="can('Asset', 'write')" variant="ghost" icon-left="lucide-link" label="Allocate Asset" @click="allocating = true" />
+								<Button
+									v-if="can('Asset', 'create')"
+									variant="ghost"
+									icon-left="lucide-plus"
+									label="New Asset"
+									@click="$router.push({ path: '/assets/new', query: { project: project.name } })"
+								/>
+							</div>
+						</div>
+						<p v-if="project.status !== 'Open' && detail.assets.length" class="px-4 pt-1 text-sm text-ink-gray-5 sm:px-6">
+							The project is {{ project.status.toLowerCase() }}. Move its assets to another project or remove them.
+						</p>
+						<DataTable class="mt-2" :columns="assetColumns" :rows="detail.assets" clickable empty-text="No assets for this project yet" @row-click="(r) => $router.push(`/assets/${r.name}`)">
+							<template #asset_name="{ row }">
+								<div class="font-medium text-ink-gray-9">{{ row.asset_name }}</div>
+								<div class="text-sm text-ink-gray-5">{{ row.name }}</div>
+							</template>
+							<template #status="{ value }"><StatusBadge :status="value" /></template>
+							<template #actions="{ row }">
+								<Button
+									v-if="row.docstatus === 1 && can('Asset', 'write')"
+									size="sm"
+									variant="ghost"
+									icon-left="lucide-arrow-right-left"
+									label="Move"
+									@click.stop="moving = row.name"
+								/>
+							</template>
+						</DataTable>
+					</section>
+
+					<section v-if="detail.past_assets.length" class="rounded-xl border border-outline-gray-1">
+						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Previously on this project</h2>
+						<DataTable class="mt-2" :columns="pastAssetColumns" :rows="detail.past_assets" clickable @row-click="(r) => $router.push(`/assets/${r.name}`)">
+							<template #asset_name="{ row }">
+								<div class="font-medium text-ink-gray-9">{{ row.asset_name }}</div>
+								<div class="text-sm text-ink-gray-5">{{ row.name }}</div>
+							</template>
+							<template #to_project="{ value }">
+								<RouterLink v-if="value" :to="`/projects/${value}`" class="hover:underline" @click.stop>{{ value }}</RouterLink>
+								<span v-else class="text-ink-gray-5">Removed from project</span>
+							</template>
+						</DataTable>
+					</section>
+					<MoveAssetDialog :open="!!moving" :asset="moving" :current="project.name" @update:open="(v) => !v && (moving = '')" @done="load" />
+					<MoveAssetDialog v-model:open="allocating" :target="project.name" @done="load" />
+				</template>
 			</div>
-		</div>
+		</DocLayout>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue"
-import { useRouter } from "vue-router"
-import { Button, LoadingText, toast } from "frappe-ui"
+import { useRoute, useRouter } from "vue-router"
+import { Button, LoadingText, TabButtons, toast } from "frappe-ui"
 import ApprovalBar from "@/components/ApprovalBar.vue"
 import CompleteTaskDialog from "@/components/CompleteTaskDialog.vue"
 import DataTable, { type Column } from "@/components/DataTable.vue"
+import DocLayout from "@/components/DocLayout.vue"
+import MoveAssetDialog from "@/components/MoveAssetDialog.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import StatCard from "@/components/StatCard.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
@@ -219,10 +298,11 @@ import TreeTable from "@/components/TreeTable.vue"
 import UsageBar from "@/components/UsageBar.vue"
 import { api } from "@/api"
 import { date, docstatusLabel, money, percent } from "@/format"
-import { can, currency, needsApproval } from "@/store"
+import { can, currency, deskAccess, needsApproval } from "@/store"
 
 const props = defineProps<{ name: string }>()
 
+const route = useRoute()
 const router = useRouter()
 
 const detail = ref<any>(null)
@@ -234,6 +314,26 @@ const usable = computed(() => !needsApproval("Project") || project.value.workflo
 const subtitle = computed(() => {
 	const range = [project.value.start_date, project.value.end_date].filter(Boolean).map(date).join(" – ")
 	return [project.value.name, range].filter(Boolean).join(" · ")
+})
+
+const TABS = { overview: "Overview", tasks: "Tasks", bills: "Bills & Payments", assets: "Assets" }
+type Tab = keyof typeof TABS
+
+// kept in the URL so reloads and back navigation return to the same tab
+const tab = computed<Tab>({
+	get: () => (String(route.query.tab) in TABS ? (route.query.tab as Tab) : "overview"),
+	set: (value) => router.replace({ query: { ...route.query, tab: value === "overview" ? undefined : value } }),
+})
+const tabs = computed(() => {
+	const counts: Partial<Record<Tab, number>> = {
+		tasks: detail.value.tasks.length,
+		bills: detail.value.bills.length,
+		assets: detail.value.assets.length,
+	}
+	return Object.entries(TABS).map(([value, label]) => ({
+		value,
+		label: counts[value as Tab] ? `${label} (${counts[value as Tab]})` : label,
+	}))
 })
 
 const collapsedTasks = ref(new Set<string>())
@@ -302,7 +402,12 @@ const billColumns: Column[] = [
 	{ key: "status", label: "Status" },
 	{ key: "grand_total", label: "Total", align: "right", format: (v) => fmt(v) },
 	{ key: "outstanding_amount", label: "Outstanding", align: "right", format: (v) => fmt(v) },
+	{ key: "actions", label: "" },
 ]
+
+function payBill(bill: any) {
+	router.push({ path: "/payments/new", query: { supplier: bill.supplier, invoice: bill.name, project: props.name } })
+}
 
 const paymentColumns: Column[] = [
 	{ key: "posting_date", label: "Date", format: date },
@@ -321,6 +426,29 @@ const recurringColumns: Column[] = [
 	{ key: "total_amount", label: "Total", align: "right", format: (v) => fmt(v) },
 ]
 
+const assetColumns: Column[] = [
+	{ key: "asset_name", label: "Asset" },
+	{ key: "purchase_date", label: "Purchased", format: date },
+	{ key: "status", label: "Status" },
+	{ key: "gross_purchase_amount", label: "Gross", align: "right", format: (v) => fmt(v) },
+	{ key: "accumulated_depreciation", label: "Depreciated", align: "right", format: (v) => fmt(v) },
+	{ key: "value_after_depreciation", label: "Book Value", align: "right", format: (v) => fmt(v) },
+	{ key: "actions", label: "" },
+]
+
+const moving = ref("")
+const allocating = ref(false)
+const pastAssetColumns: Column[] = [
+	{ key: "asset_name", label: "Asset" },
+	{ key: "date", label: "Moved on", format: date },
+	{ key: "to_project", label: "Moved to" },
+	{ key: "reason", label: "Reason", format: (v) => v || "—" },
+]
+
+function assetTotal(field: string) {
+	return detail.value.assets.filter((a: any) => a.docstatus === 1).reduce((total: number, a: any) => total + Number(a[field] || 0), 0)
+}
+
 const details = computed(() => [
 	["Budget", project.value.budget],
 	["Default cost center", project.value.cost_center],
@@ -330,7 +458,7 @@ const details = computed(() => [
 ])
 
 async function load() {
-	detail.value = await api("spend.spend.doctype.project.project.get_project_summary", { project: props.name })
+	detail.value = await api("spend.projects.doctype.project.project.get_project_summary", { project: props.name })
 }
 
 async function setStatus(status: string) {

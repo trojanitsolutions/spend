@@ -5,7 +5,7 @@
 			<template v-if="doc" #badge><StatusBadge :status="doc.status" /></template>
 			<template #actions>
 				<template v-if="doc">
-					<Button label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
+					<Button v-if="deskAccess" label="Open in Desk" icon-left="lucide-external-link" @click="openDesk" />
 					<Button v-if="can('Task', 'write')" theme="red" label="Delete" @click="remove" />
 					<Button v-if="canWrite && !DONE.includes(doc.status) && !doc.is_group" icon-left="lucide-check" label="Mark Completed" :loading="saving" @click="completeOpen = true" />
 				</template>
@@ -14,81 +14,83 @@
 		</PageHeader>
 
 		<CompleteTaskDialog v-if="doc" v-model:open="completeOpen" :tasks="[doc.name]" @done="load" />
-		<form class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6" @submit.prevent="save">
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
-				<legend class="px-1 text-base font-semibold">Task</legend>
-				<FormControl v-model="draft.subject" class="sm:col-span-2" label="Subject" required placeholder="e.g. Pour the foundation" />
-				<LinkField
-					v-model="draft.project"
-					doctype="Project"
-					label="Project"
-					required
-					:filters="{ company: session.company, status: 'Open' }"
-					:class="{ 'pointer-events-none opacity-60': !!doc }"
-				/>
-				<LinkField
-					v-model="draft.parent_task"
-					doctype="Task"
-					label="Under group task"
-					:filters="{ project: draft.project || '', is_group: 1, name: ['!=', name || ''] }"
-				/>
-				<FormControl v-model="draft.status" type="select" label="Status" :options="STATUSES" />
-				<FormControl v-model="draft.priority" type="select" label="Priority" :options="PRIORITIES" />
-				<div class="flex flex-col gap-2 sm:col-span-2 sm:flex-row sm:gap-6">
-					<FormControl v-model="draft.is_group" type="checkbox" label="Group task (holds other tasks)" />
-					<FormControl v-model="draft.is_milestone" type="checkbox" label="Milestone" />
-				</div>
-			</fieldset>
-
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
-				<legend class="px-1 text-base font-semibold">Timeline</legend>
-				<FormControl v-model="draft.exp_start_date" type="date" label="Expected start" />
-				<FormControl v-model="draft.exp_end_date" type="date" label="Expected end" />
-				<FormControl v-model="draft.progress" type="number" label="% Progress" :disabled="draft.status === 'Completed'" />
-				<FormControl
-					v-if="draft.status === 'Completed'"
-					v-model="draft.completed_on"
-					type="date"
-					label="Completed on"
-					required
-					:max="today()"
-					:description="doc?.completed_by && doc.status === 'Completed' ? `Marked completed by ${doc.completed_by}` : 'When the work was done'"
-				/>
-			</fieldset>
-
-			<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
-				<legend class="px-1 text-base font-semibold">Details</legend>
-				<FormControl v-model="draft.description" type="textarea" label="Description" :rows="5" />
-				<div>
-					<div class="mb-1.5 text-xs text-ink-gray-5">Depends on — this task can be completed only after these are done</div>
-					<div class="flex flex-wrap items-center gap-2">
-						<Badge v-for="task in draft.depends_on" :key="task" theme="gray" class="cursor-pointer" :label="`${subjects[task] || task} ×`" @click="removeDependency(task)" />
-						<LinkField
-							:key="draft.depends_on.length"
-							class="min-w-56 flex-1"
-							doctype="Task"
-							placeholder="Add a task this one waits for"
-							:filters="{ project: draft.project || '', name: ['not in', [name || '', ...draft.depends_on]] }"
-							@update:model-value="addDependency"
-						/>
+		<DocLayout doctype="Task" :name="doc?.name" :version="doc?.modified">
+			<form :class="doc ? 'space-y-6' : 'mx-auto max-w-3xl space-y-6'" @submit.prevent="save">
+				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+					<legend class="px-1 text-base font-semibold">Task</legend>
+					<FormControl v-model="draft.subject" class="sm:col-span-2" label="Subject" required placeholder="e.g. Pour the foundation" />
+					<LinkField
+						v-model="draft.project"
+						doctype="Project"
+						label="Project"
+						required
+						:filters="{ company: session.company, status: 'Open' }"
+						:class="{ 'pointer-events-none opacity-60': !!doc }"
+					/>
+					<LinkField
+						v-model="draft.parent_task"
+						doctype="Task"
+						label="Under group task"
+						:filters="{ project: draft.project || '', is_group: 1, name: ['!=', name || ''] }"
+					/>
+					<FormControl v-model="draft.status" type="select" label="Status" :options="STATUSES" />
+					<FormControl v-model="draft.priority" type="select" label="Priority" :options="PRIORITIES" />
+					<div class="flex flex-col gap-2 sm:col-span-2 sm:flex-row sm:gap-6">
+						<FormControl v-model="draft.is_group" type="checkbox" label="Group task (holds other tasks)" />
+						<FormControl v-model="draft.is_milestone" type="checkbox" label="Milestone" />
 					</div>
-				</div>
-				<div>
-					<div class="mb-1.5 text-xs text-ink-gray-5">Assigned to</div>
-					<div class="flex flex-wrap items-center gap-2">
-						<Badge v-for="user in draft.assign" :key="user" theme="blue" class="cursor-pointer" :label="`${user} ×`" @click="draft.assign = draft.assign.filter((u) => u !== user)" />
-						<LinkField
-							:key="draft.assign.length"
-							class="min-w-56 flex-1"
-							doctype="User"
-							placeholder="Assign a user"
-							:filters="{ enabled: 1, user_type: 'System User' }"
-							@update:model-value="(u: string) => u && !draft.assign.includes(u) && draft.assign.push(u)"
-						/>
+				</fieldset>
+
+				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+					<legend class="px-1 text-base font-semibold">Timeline</legend>
+					<FormControl v-model="draft.exp_start_date" type="date" label="Expected start" />
+					<FormControl v-model="draft.exp_end_date" type="date" label="Expected end" />
+					<FormControl v-model="draft.progress" type="number" label="% Progress" :disabled="draft.status === 'Completed'" />
+					<FormControl
+						v-if="draft.status === 'Completed'"
+						v-model="draft.completed_on"
+						type="date"
+						label="Completed on"
+						required
+						:max="today()"
+						:description="doc?.completed_by && doc.status === 'Completed' ? `Marked completed by ${doc.completed_by}` : 'When the work was done'"
+					/>
+				</fieldset>
+
+				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
+					<legend class="px-1 text-base font-semibold">Details</legend>
+					<FormControl v-model="draft.description" type="textarea" label="Description" :rows="5" />
+					<div>
+						<div class="mb-1.5 text-xs text-ink-gray-5">Depends on — this task can be completed only after these are done</div>
+						<div class="flex flex-wrap items-center gap-2">
+							<Badge v-for="task in draft.depends_on" :key="task" theme="gray" class="cursor-pointer" :label="`${subjects[task] || task} ×`" @click="removeDependency(task)" />
+							<LinkField
+								:key="draft.depends_on.length"
+								class="min-w-56 flex-1"
+								doctype="Task"
+								placeholder="Add a task this one waits for"
+								:filters="{ project: draft.project || '', name: ['not in', [name || '', ...draft.depends_on]] }"
+								@update:model-value="addDependency"
+							/>
+						</div>
 					</div>
-				</div>
-			</fieldset>
-		</form>
+					<div>
+						<div class="mb-1.5 text-xs text-ink-gray-5">Assigned to</div>
+						<div class="flex flex-wrap items-center gap-2">
+							<Badge v-for="user in draft.assign" :key="user" theme="blue" class="cursor-pointer" :label="`${user} ×`" @click="draft.assign = draft.assign.filter((u) => u !== user)" />
+							<LinkField
+								:key="draft.assign.length"
+								class="min-w-56 flex-1"
+								doctype="User"
+								placeholder="Assign a user"
+								:filters="{ enabled: 1, user_type: 'System User' }"
+								@update:model-value="(u: string) => u && !draft.assign.includes(u) && draft.assign.push(u)"
+							/>
+						</div>
+					</div>
+				</fieldset>
+			</form>
+		</DocLayout>
 	</div>
 </template>
 
@@ -97,12 +99,13 @@ import { computed, onMounted, reactive, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { Badge, Button, FormControl, LoadingText, dialog, toast } from "frappe-ui"
 import CompleteTaskDialog from "@/components/CompleteTaskDialog.vue"
+import DocLayout from "@/components/DocLayout.vue"
 import LinkField from "@/components/LinkField.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
 import { api, getDoc, insertDoc } from "@/api"
 import { today } from "@/format"
-import { can, session } from "@/store"
+import { can, deskAccess, session } from "@/store"
 
 const STATUSES = ["Open", "Working", "Pending Review", "Overdue", "Completed", "Cancelled"]
 const PRIORITIES = ["Low", "Medium", "High", "Urgent"]

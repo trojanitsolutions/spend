@@ -63,6 +63,12 @@ add_to_apps_screen = [
 # include app icons in desk
 # app_include_icons = "spend/public/icons.svg"
 
+# Boot
+# ----
+
+# hide links to modules blocked for the user from the Spend sidebar
+boot_session = "spend.spend.boot.filter_sidebar"
+
 # Home Pages
 # ----------
 
@@ -101,11 +107,11 @@ website_route_rules = [
 # ------------
 
 # before_install = "spend.install.before_install"
-after_install = "spend.spend.setup.after_install"
+after_install = ["spend.spend.setup.after_install", "spend.training.setup.after_install"]
 # the workflow fixtures are imported after install and on every migrate; these put back
 # the approval switches from Spend Settings over them
 after_sync = "spend.spend.approval.apply_settings"
-after_migrate = "spend.spend.approval.apply_settings"
+after_migrate = ["spend.spend.approval.apply_settings", "spend.training.setup.after_migrate"]
 
 # Uninstallation
 # ------------
@@ -177,10 +183,10 @@ after_migrate = "spend.spend.approval.apply_settings"
 scheduler_events = {
 	"daily": [
 		"spend.spend.depreciation.post_depreciation_entries_daily",
-		"spend.spend.doctype.purchase_invoice.purchase_invoice.update_overdue_invoices",
-		"spend.spend.doctype.recurring_payment.recurring_payment.post_recurring_payments_daily",
+		"spend.purchasing.doctype.purchase_invoice.purchase_invoice.update_overdue_invoices",
+		"spend.purchasing.doctype.recurring_payment.recurring_payment.post_recurring_payments_daily",
 		"spend.spend.notifications.notify_bills_due",
-		"spend.spend.doctype.task.task.set_tasks_as_overdue",
+		"spend.projects.doctype.task.task.set_tasks_as_overdue",
 	],
 }
 
@@ -221,7 +227,6 @@ fixtures = [
 				"in",
 				[
 					"Draft",
-					"Pending Manager Approval",
 					"Pending GM Approval",
 					"Approved",
 					"Rejected",
@@ -296,7 +301,7 @@ notification_skip_email_types = ["Approval", "Budget Alert", "Bill Reminder", "R
 
 # Request Events
 # ----------------
-# before_request = ["spend.utils.before_request"]
+before_request = ["spend.spend.desk_access.redirect_from_desk"]
 # after_request = ["spend.utils.after_request"]
 
 # Job Events

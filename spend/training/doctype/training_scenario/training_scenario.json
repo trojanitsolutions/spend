@@ -1,0 +1,217 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:title",
+ "creation": "2026-10-28 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "track",
+  "difficulty",
+  "column_break_1",
+  "is_active",
+  "sequence",
+  "passing_score",
+  "section_modes",
+  "allow_guided",
+  "column_break_2",
+  "allow_practice",
+  "section_description",
+  "start_route",
+  "video_url",
+  "description",
+  "section_steps",
+  "steps",
+  "section_quiz",
+  "quiz",
+  "section_seed",
+  "seed_data",
+  "starter_hash",
+  "starter_synced_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "unique": 1,
+   "bold": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "track",
+   "fieldtype": "Link",
+   "label": "Track",
+   "options": "Training Track",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "difficulty",
+   "fieldtype": "Select",
+   "label": "Difficulty",
+   "options": "Beginner\nIntermediate\nAdvanced",
+   "default": "Beginner"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Active",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sequence",
+   "fieldtype": "Int",
+   "label": "Sequence"
+  },
+  {
+   "fieldname": "passing_score",
+   "fieldtype": "Int",
+   "label": "Passing Score",
+   "default": "70"
+  },
+  {
+   "fieldname": "section_modes",
+   "fieldtype": "Section Break",
+   "label": "Modes"
+  },
+  {
+   "fieldname": "allow_guided",
+   "fieldtype": "Check",
+   "label": "Allow Guided",
+   "default": "1"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "allow_practice",
+   "fieldtype": "Check",
+   "label": "Allow Practice",
+   "default": "1"
+  },
+  {
+   "fieldname": "section_description",
+   "fieldtype": "Section Break",
+   "label": "Introduction"
+  },
+  {
+   "fieldname": "start_route",
+   "fieldtype": "Data",
+   "label": "Start Route",
+   "description": "Spend page the scenario opens on, for example /bills/new"
+  },
+  {
+   "fieldname": "video_url",
+   "fieldtype": "Data",
+   "label": "Video URL",
+   "options": "URL",
+   "description": "Optional intro video, shown before the first step"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_steps",
+   "fieldtype": "Section Break",
+   "label": "Steps"
+  },
+  {
+   "fieldname": "steps",
+   "fieldtype": "Table",
+   "label": "Steps",
+   "options": "Training Step"
+  },
+  {
+   "fieldname": "section_quiz",
+   "fieldtype": "Section Break",
+   "label": "Quiz",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "quiz",
+   "fieldtype": "Table",
+   "label": "Questions",
+   "options": "Training Quiz Question"
+  },
+  {
+   "fieldname": "section_seed",
+   "fieldtype": "Section Break",
+   "label": "Sample Data",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "seed_data",
+   "fieldtype": "Code",
+   "label": "Sample Data",
+   "options": "JSON",
+   "description": "Records created in the training company when missing, for example {\"Supplier\": [{\"supplier_name\": \"Acme Stationers\"}]}"
+  },
+  {
+   "fieldname": "starter_hash",
+   "fieldtype": "Data",
+   "label": "Starter Hash",
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "starter_synced_on",
+   "fieldtype": "Datetime",
+   "label": "Starter Synced On",
+   "hidden": 1,
+   "read_only": 1,
+   "no_copy": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-28 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training",
+ "name": "Training Scenario",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "Spend Trainer",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "sequence",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "title"
+}

@@ -2,6 +2,7 @@ import { createApp } from "vue"
 import { setConfig, toast } from "frappe-ui"
 import App from "./App.vue"
 import router from "./router"
+import { vTour } from "./training/tour"
 import "./style.css"
 
 // non-blocking server messages (e.g. "budget exceeded" warnings) become toasts
@@ -28,4 +29,4 @@ if (window.favicon) {
 	link.href = window.favicon
 }
 
-createApp(App).use(router).mount("#app")
+createApp(App).use(router).directive("tour", vTour).mount("#app")

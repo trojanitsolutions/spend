@@ -4,7 +4,7 @@
 		<PageHeader :title="def.name.replace(' Report', '')" :subtitle="def.description" :back="{ to: '/reports', label: 'Reports' }">
 			<template #actions>
 				<Button icon-left="lucide-download" label="CSV" :disabled="!result?.result.length" @click="downloadCsv" />
-				<Button icon-left="lucide-external-link" label="Open in Desk" @click="openDesk" />
+				<Button v-if="deskAccess" icon-left="lucide-external-link" label="Open in Desk" @click="openDesk" />
 			</template>
 		</PageHeader>
 
@@ -80,7 +80,7 @@ import TreeTable from "@/components/TreeTable.vue"
 import { api, runReport, type ReportColumn, type ReportResult } from "@/api"
 import { date, money, percent, today } from "@/format"
 import { REPORTS } from "@/reports"
-import { can, currency, session } from "@/store"
+import { can, currency, deskAccess, session } from "@/store"
 
 const TREES: Record<string, { name: string; parent: string }> = {
 	"chart-of-accounts": { name: "account", parent: "parent_account" },

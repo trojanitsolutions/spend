@@ -6,21 +6,21 @@
 import frappe
 
 from spend.spend.depreciation import post_due_depreciation
-from spend.spend.report.asset_book_value.asset_book_value import execute as asset_book_value
-from spend.spend.report.asset_depreciation_schedule_report.asset_depreciation_schedule_report import (
+from spend.assets.report.asset_book_value.asset_book_value import execute as asset_book_value
+from spend.assets.report.asset_depreciation_schedule_report.asset_depreciation_schedule_report import (
 	execute as depreciation_schedule_report,
 )
-from spend.spend.report.asset_register.asset_register import execute as asset_register
-from spend.spend.report.budget_utilization.budget_utilization import execute as budget_utilization
-from spend.spend.report.budget_vs_actual.budget_vs_actual import execute as budget_vs_actual
-from spend.spend.report.chart_of_accounts.chart_of_accounts import execute as chart_of_accounts
-from spend.spend.report.cost_center_wise_spending.cost_center_wise_spending import (
+from spend.assets.report.asset_register.asset_register import execute as asset_register
+from spend.budgeting.report.budget_utilization.budget_utilization import execute as budget_utilization
+from spend.budgeting.report.budget_vs_actual.budget_vs_actual import execute as budget_vs_actual
+from spend.accounts.report.chart_of_accounts.chart_of_accounts import execute as chart_of_accounts
+from spend.accounts.report.cost_center_wise_spending.cost_center_wise_spending import (
 	execute as cost_center_spending,
 )
-from spend.spend.report.depreciation_due.depreciation_due import execute as depreciation_due
-from spend.spend.report.general_ledger.general_ledger import execute as general_ledger
-from spend.spend.report.project_spend.project_spend import execute as project_spend
-from spend.spend.report.supplier_outstanding.supplier_outstanding import execute as supplier_outstanding
+from spend.assets.report.depreciation_due.depreciation_due import execute as depreciation_due
+from spend.accounts.report.general_ledger.general_ledger import execute as general_ledger
+from spend.projects.report.project_spend.project_spend import execute as project_spend
+from spend.purchasing.report.supplier_outstanding.supplier_outstanding import execute as supplier_outstanding
 from spend.tests.utils import (
 	TEST_COMPANY,
 	SpendTestCase,
@@ -154,9 +154,9 @@ class TestSpendReports(SpendTestCase):
 
 		filters = {"company": TEST_COMPANY, "from_date": "2025-05-01", "to_date": "2025-05-31"}
 		_columns, data, _msg, _chart, summary = general_ledger({**filters, "account": account("Utilities")})
-		opening, *rows, total, closing = data
+		closing, total, *rows, opening = data
 		self.assertEqual((opening["debit"], opening["balance"]), (100, 100))
-		self.assertEqual([r["balance"] for r in rows], [140, 165])
+		self.assertEqual([r["balance"] for r in rows], [165, 140])
 		self.assertEqual(total["debit"], 65)
 		self.assertEqual((closing["debit"], closing["balance"]), (165, 165))
 		self.assertEqual(summary[0]["value"], 65)

@@ -128,7 +128,7 @@ def validate_category_budget(doc, lines: list[tuple]):
 
 	`lines` are (account, project, category, sub category, amount) tuples.
 	"""
-	from spend.spend.doctype.budget.budget import BudgetExceededError
+	from spend.budgeting.doctype.budget.budget import BudgetExceededError
 
 	pending = {}
 	for account, project, category, sub_category, amount in lines:
@@ -175,7 +175,7 @@ def get_category_room(project: str, category: str, sub_category: str | None, exc
 	Returns (row, free) pairs: the budget less what is spent and what other recurring
 	payments still hold. What they paid is already spent.
 	"""
-	from spend.spend.doctype.project.project import get_recurring_holds
+	from spend.projects.doctype.project.project import get_recurring_holds
 
 	rooms = []
 	for row in get_project_category_rows(project):

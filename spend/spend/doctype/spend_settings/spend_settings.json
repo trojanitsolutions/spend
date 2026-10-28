@@ -134,7 +134,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-27 09:00:00.000000",
+ "modified": "2026-10-27 19:00:00.000000",
  "modified_by": "Administrator",
  "module": "spend",
  "name": "Spend Settings",
@@ -166,15 +166,6 @@
    "role": "General Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 0,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "role": "Accounts User",
-   "share": 0,
-   "write": 0
   }
  ],
  "sort_field": "modified",
