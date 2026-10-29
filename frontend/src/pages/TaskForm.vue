@@ -16,7 +16,7 @@
 		<CompleteTaskDialog v-if="doc" v-model:open="completeOpen" :tasks="[doc.name]" @done="load" />
 		<DocLayout doctype="Task" :name="doc?.name" :version="doc?.modified">
 			<form :class="doc ? 'space-y-6' : 'mx-auto max-w-3xl space-y-6'" @submit.prevent="save">
-				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+				<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Task</legend>
 					<FormControl v-model="draft.subject" class="sm:col-span-2" label="Subject" required placeholder="e.g. Pour the foundation" />
 					<LinkField
@@ -41,7 +41,7 @@
 					</div>
 				</fieldset>
 
-				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+				<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Timeline</legend>
 					<FormControl v-model="draft.exp_start_date" type="date" label="Expected start" />
 					<FormControl v-model="draft.exp_end_date" type="date" label="Expected end" />
@@ -57,7 +57,7 @@
 					/>
 				</fieldset>
 
-				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
+				<fieldset class="space-y-4 card p-4" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Details</legend>
 					<FormControl v-model="draft.description" type="textarea" label="Description" :rows="5" />
 					<div>

@@ -9,7 +9,7 @@
 
 		<div v-if="!form" class="py-16 text-center"><LoadingText /></div>
 		<form v-else class="mx-auto max-w-4xl space-y-6 p-4 sm:p-6" @submit.prevent="save">
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Scenario</legend>
 				<FormControl v-model="form.track" type="select" label="Track" :options="form.tracks" />
 				<FormControl v-model="form.difficulty" type="select" label="Difficulty" :options="['Beginner', 'Intermediate', 'Advanced']" />
@@ -24,7 +24,7 @@
 				</div>
 			</fieldset>
 
-			<fieldset class="rounded-xl border border-outline-gray-1">
+			<fieldset class="card">
 				<legend class="ml-4 px-1 text-base font-semibold">Steps</legend>
 				<p v-if="!form.steps.length" class="px-4 py-6 text-center text-sm text-ink-gray-5">No steps yet. Record them on the page, or add one here.</p>
 				<div v-for="(s, i) in form.steps" :key="i" class="border-b border-outline-gray-1 last:border-0">
@@ -48,7 +48,7 @@
 				</div>
 			</fieldset>
 
-			<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset class="space-y-4 card p-4">
 				<legend class="px-1 text-base font-semibold">Quiz</legend>
 				<p v-if="!form.quiz.length" class="text-sm text-ink-gray-5">Optional. The quiz is 30% of the score when there is one.</p>
 				<div v-for="(q, i) in form.quiz" :key="i" class="grid grid-cols-1 gap-3 rounded-lg border border-outline-gray-2 p-3 sm:grid-cols-2">
@@ -65,7 +65,7 @@
 				<Button icon-left="lucide-plus" label="Add question" @click="form.quiz.push({ question: '', options: '', correct_option: '', explanation: '' })" />
 			</fieldset>
 
-			<fieldset class="space-y-2 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset class="space-y-2 card p-4">
 				<legend class="px-1 text-base font-semibold">Sample data</legend>
 				<p class="text-sm text-ink-gray-5">
 					Created in the training company when missing, before the scenario starts. Allowed: Supplier, Item, Item Group, UOM, Cost Center, Expense Category, Project.

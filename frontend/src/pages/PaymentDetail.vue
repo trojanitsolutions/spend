@@ -27,12 +27,12 @@
 					<StatCard label="Reference" :value="payment.reference_no || '—'" :hint="payment.reference_date ? date(payment.reference_date) : ''" />
 				</div>
 
-				<section class="rounded-xl border border-outline-gray-1">
+				<section class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills paid</h2>
 					<DataTable class="mt-2" :columns="columns" :rows="payment.references" clickable @row-click="(r) => $router.push(`/bills/${r.purchase_invoice}`)" />
 				</section>
 
-				<section class="rounded-xl border border-outline-gray-1 p-4">
+				<section class="card p-4">
 					<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
 						<dt class="text-ink-gray-5">Supplier</dt>
 						<dd class="text-right text-ink-gray-8">

@@ -19,7 +19,7 @@
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-					<section class="rounded-xl border border-outline-gray-1 p-4">
+					<section class="card p-4">
 						<h2 class="mb-3 text-base font-semibold">Details</h2>
 						<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
 							<template v-for="[label, value] in details" :key="label">
@@ -29,7 +29,7 @@
 						</dl>
 					</section>
 
-					<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
+					<section class="card lg:col-span-2">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills</h2>
 						<DataTable class="mt-2" :columns="billColumns" :rows="detail.invoices" clickable empty-text="No bills yet" @row-click="(r) => $router.push(`/bills/${r.name}`)">
 							<template #status="{ value }"><StatusBadge :status="value" /></template>
@@ -37,7 +37,7 @@
 					</section>
 				</div>
 
-				<section class="rounded-xl border border-outline-gray-1">
+				<section class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
 					<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments yet" @row-click="(r) => $router.push(`/payments/${r.name}`)">
 						<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>

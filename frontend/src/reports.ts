@@ -107,13 +107,14 @@ export const REPORTS: ReportDef[] = [
 	{
 		slug: "project-category-monthly",
 		name: "Project Category Monthly",
-		description: "What each expense category and sub category charged in each month",
+		description: "What each expense category and sub category charged in each month, quarter or year",
 		icon: "lucide-tags",
 		group: "Projects",
 		filters: [
 			fiscalYear,
 			{ fieldname: "project", label: "Project", type: "link", doctype: "Project", linkFilters: (company) => ({ company }) },
 			{ fieldname: "expense_category", label: "Category", type: "link", doctype: "Expense Category", linkFilters: (company) => ({ company, is_parent_category: 1 }) },
+			{ fieldname: "period", label: "Period", type: "select", options: ["Monthly", "Quarterly", "Yearly"], default: () => "Monthly" },
 		],
 	},
 	{

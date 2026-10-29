@@ -8,7 +8,7 @@
 
 		<div v-if="!settings" class="p-6"><LoadingText /></div>
 		<form v-else class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6" @submit.prevent="save">
-			<fieldset class="space-y-3 rounded-xl border border-outline-gray-1 p-4" :disabled="!settings.can_write">
+			<fieldset class="space-y-3 card p-4" :disabled="!settings.can_write">
 				<legend class="px-1 text-base font-semibold">Approvals</legend>
 				<p class="text-sm text-ink-gray-6">
 					Checked documents need the General Manager's approval before they are posted.
@@ -20,7 +20,7 @@
 				<FormControl v-model="values.allow_self_approval" type="checkbox" label="Allow approvers to approve documents they created" />
 			</fieldset>
 
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!settings.can_write">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2" :disabled="!settings.can_write">
 				<legend class="px-1 text-base font-semibold">Alerts</legend>
 				<FormControl v-model="values.budget_alert_threshold" type="number" min="0" max="100" label="Budget alert at (% used)" description="For project and cost center budgets. 0 turns it off." />
 				<div class="space-y-3 pt-6">
@@ -31,7 +31,7 @@
 				<FormControl v-if="values.notify_bills_due" v-model="values.bill_due_days" type="number" min="0" label="Include bills due within (days)" description="Overdue bills are always included" />
 			</fieldset>
 
-			<fieldset class="space-y-3 rounded-xl border border-outline-gray-1 p-4" :disabled="!settings.can_write">
+			<fieldset class="space-y-3 card p-4" :disabled="!settings.can_write">
 				<legend class="px-1 text-base font-semibold">Email</legend>
 				<FormControl v-model="values.send_email" type="checkbox" label="Also send notifications by email" />
 				<p v-if="values.send_email && !settings.has_email_account" class="rounded-lg bg-surface-amber-1 p-3 text-sm text-ink-amber-4">
@@ -40,7 +40,38 @@
 				<p class="text-sm text-ink-gray-6">People can turn email off for themselves in their Notification Settings in Desk.</p>
 			</fieldset>
 
-			<fieldset v-if="hasDemoData && can('Company', 'write')" class="space-y-3 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset v-if="templates" class="space-y-3 card p-4">
+				<legend class="px-1 text-base font-semibold">Appearance</legend>
+				<p class="text-sm text-ink-gray-6">The look of Spend for everyone. Change a template's title, logo, colors and font in Desk.</p>
+				<ul class="divide-y divide-outline-gray-1 rounded-lg border border-outline-gray-1">
+					<li v-for="t in templates" :key="t.name" class="flex flex-wrap items-center gap-3 px-3 py-2.5">
+						<span
+							class="size-5 shrink-0 rounded-full border border-outline-gray-2"
+							:style="{ background: t.primary_color || 'var(--surface-gray-10)' }"
+							aria-hidden="true"
+						/>
+						<div class="min-w-0 flex-1">
+							<div class="flex items-center gap-2 text-base font-medium text-ink-gray-9">
+								{{ t.name }}
+								<Badge v-if="t.is_active" theme="green" label="Active" />
+								<Badge v-if="t.is_standard" label="Standard" />
+							</div>
+							<div v-if="t.description" class="truncate text-sm text-ink-gray-5">{{ t.description }}</div>
+						</div>
+						<Button
+							v-if="!t.is_active && can('Frontend Template', 'write')"
+							type="button"
+							label="Activate"
+							:loading="activating === t.name"
+							@click="activate(t.name)"
+						/>
+						<Button type="button" variant="ghost" icon="lucide-external-link" :aria-label="`Edit ${t.name} in Desk`" :href="deskLink(t.name)" />
+					</li>
+				</ul>
+				<Button v-if="can('Frontend Template', 'create')" type="button" label="New template" icon-left="lucide-plus" href="/app/frontend-template/new" />
+			</fieldset>
+
+			<fieldset v-if="hasDemoData && can('Company', 'write')" class="space-y-3 card p-4">
 				<legend class="px-1 text-base font-semibold">Demo data</legend>
 				<p class="text-sm text-ink-gray-6">
 					{{ session.company }} has the sample suppliers, items, bills, payments, expenses, budget, projects, assets and rent added at setup.
@@ -54,10 +85,11 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue"
-import { Button, FormControl, LoadingText, dialog, toast } from "frappe-ui"
+import { Badge, Button, FormControl, LoadingText, dialog, toast } from "frappe-ui"
 import PageHeader from "@/components/PageHeader.vue"
 import { api } from "@/api"
 import { can, hasDemoData, loadSession, reloadSession, session } from "@/store"
+import { applyTheme } from "@/theme"
 
 const APPROVALS = [
 	["approve_purchase_invoice", "Bills"],
@@ -74,6 +106,8 @@ const settings = ref<any>(null)
 const values = reactive<Record<string, any>>({})
 const saving = ref(false)
 const clearing = ref(false)
+const templates = ref<any[] | null>(null)
+const activating = ref("")
 
 function apply(result: any) {
 	settings.value = result
@@ -115,5 +149,27 @@ function confirmClear() {
 	})
 }
 
-onMounted(async () => apply(await api("spend.api.get_settings")))
+async function loadTemplates() {
+	if (can("Frontend Template", "read")) templates.value = await api("spend.api.get_frontend_templates")
+}
+
+async function activate(name: string) {
+	activating.value = name
+	try {
+		applyTheme(await api("spend.api.activate_frontend_template", { name }))
+		await loadTemplates()
+		toast.success(`${name} is now the active template`)
+	} finally {
+		activating.value = ""
+	}
+}
+
+function deskLink(name: string) {
+	return `/app/frontend-template/${encodeURIComponent(name)}`
+}
+
+onMounted(async () => {
+	loadTemplates()
+	apply(await api("spend.api.get_settings"))
+})
 </script>

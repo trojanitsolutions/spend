@@ -201,8 +201,9 @@ class IntegrationTestExpenseCategory(SpendTestCase):
 		self.assertEqual(amounts[(self.utilities.name, None, "2025-02")], 50)
 		self.assertEqual(amounts[(self.rent.name, None, "2025-03")], 70)
 
-		monthly = get_project_summary(project.name)["monthly"]
-		self.assertEqual(len(monthly["months"]), 12)
+		costing = get_project_summary(project.name)["costing"]
+		monthly = costing["Monthly"]
+		self.assertEqual(len(monthly["periods"]), 12)
 		rows = {(r["category"], r["sub_category"]): r for r in monthly["rows"]}
 		self.assertEqual(rows[(self.utilities.name, None)]["months"]["2025-02"], 150)
 		self.assertEqual(rows[(self.utilities.name, self.power.name)]["total"], 100)
@@ -211,6 +212,15 @@ class IntegrationTestExpenseCategory(SpendTestCase):
 			[(r["category"], r["sub_category"]) for r in monthly["rows"]],
 			[(self.rent.name, None), (self.utilities.name, None), (self.utilities.name, self.power.name)],
 		)  # each category is followed by its sub categories
+
+		# Feb and Mar fall in the first quarter of a fiscal year that starts in January
+		quarters = {(r["category"], r["sub_category"]): r for r in costing["Quarterly"]["rows"]}
+		quarter = f"{ensure_fiscal_year(2025)}-Q1"
+		self.assertIn(quarter, [p["key"] for p in costing["Quarterly"]["periods"]])
+		self.assertEqual(quarters[(self.utilities.name, None)]["months"][quarter], 150)
+		self.assertEqual(quarters[(self.rent.name, None)]["months"][quarter], 70)
+		years = {(r["category"], r["sub_category"]): r for r in costing["Yearly"]["rows"]}
+		self.assertEqual(years[(self.utilities.name, None)]["months"][ensure_fiscal_year(2025)], 150)
 
 	def test_monthly_report(self):
 		from spend.projects.report.project_category_monthly.project_category_monthly import execute
@@ -227,3 +237,14 @@ class IntegrationTestExpenseCategory(SpendTestCase):
 		self.assertEqual(data[1]["2025_02"], 100)
 		self.assertEqual(summary[0]["value"], 100)
 		self.assertTrue(chart)
+
+		columns, data, *_ = execute(
+			{
+				"company": TEST_COMPANY,
+				"project": project.name,
+				"fiscal_year": ensure_fiscal_year(2025),
+				"period": "Quarterly",
+			}
+		)
+		self.assertEqual(len(columns), 2 + 4 + 1)
+		self.assertEqual(data[1][f"{ensure_fiscal_year(2025)}_Q1".replace("-", "_").replace(" ", "_")], 100)

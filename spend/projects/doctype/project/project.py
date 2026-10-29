@@ -765,9 +765,10 @@ def get_task_summary(project: str) -> dict:
 
 
 def get_category_summary(project) -> dict:
-	"""Budget and charge of each category of the project, and its charge in each month."""
+	"""Budget and charge of each category of the project, and its charge in each month, quarter and year."""
 	from spend.spend.expense_category import (
-		build_monthly,
+		PERIODS,
+		build_periods,
 		get_category_monthly,
 		get_category_spent,
 		get_project_months,
@@ -788,10 +789,14 @@ def get_category_summary(project) -> dict:
 			}
 		)
 
-	months = get_project_months(project)
+	# months show the last 24; quarters and years cover the whole project
+	months = get_project_months(project, limit=None)
 	entries = get_category_monthly(f"{months[0]}-01", today(), project=project.name)
 	pairs = [(r.expense_category, r.expense_sub_category) for r in project.expense_categories]
 	return {
 		"categories": categories,
-		"monthly": {"months": months, "rows": build_monthly(entries, months, pairs)},
+		"costing": {
+			period: build_periods(entries, months[-24:] if period == "Monthly" else months, period, pairs)
+			for period in PERIODS
+		},
 	}

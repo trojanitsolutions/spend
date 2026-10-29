@@ -1,7 +1,7 @@
 <template>
 	<FrappeUIProvider>
 		<div v-if="!session.ready" class="flex h-screen items-center justify-center bg-surface-base">
-			<LoadingText text="Loading Spend…" />
+			<LoadingText :text="`Loading ${theme.appTitle}…`" />
 		</div>
 		<EmptyState
 			v-else-if="session.error"
@@ -40,6 +40,7 @@ import AppShell from "@/components/AppShell.vue"
 import EmptyState from "@/components/EmptyState.vue"
 import Setup from "@/pages/Setup.vue"
 import { loadSession, logout, session } from "@/store"
+import { theme } from "@/theme"
 
 onMounted(loadSession)
 

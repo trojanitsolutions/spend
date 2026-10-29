@@ -9,12 +9,12 @@
 
 		<div v-if="loading" class="p-6"><LoadingText /></div>
 		<form v-else class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6" @submit.prevent="save(false)">
-			<fieldset v-if="amendOf" class="rounded-xl border border-outline-gray-1 p-4">
+			<fieldset v-if="amendOf" class="card p-4">
 				<legend class="px-1 text-base font-semibold">Amendment</legend>
 				<FormControl v-model="doc.amendment_reason" type="textarea" label="Reason for amendment" required placeholder="What changed and why? Approvers see this." />
 			</fieldset>
 
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Scope</legend>
 				<LinkField v-model="doc.cost_center" doctype="Cost Center" label="Cost center" required :disabled="!!amendOf" :filters="{ company: session.company, disabled: 0 }" description="A group cost center covers all of its children" />
 				<FormControl v-model="doc.fiscal_year" type="select" label="Fiscal year" :options="session.fiscalYears.map((f) => f.name)" required :disabled="!!amendOf" />
@@ -22,10 +22,10 @@
 				<FormControl v-model="doc.action_if_exceeded" type="select" label="When exceeded" :options="['Warn', 'Stop', 'Ignore']" description="Checked whenever an expense is posted" />
 			</fieldset>
 
-			<fieldset class="rounded-xl border border-outline-gray-1 p-4">
+			<fieldset class="card p-4">
 				<legend class="px-1 text-base font-semibold">Expense accounts</legend>
 				<div class="space-y-3">
-					<div v-for="(row, i) in doc.accounts" :key="row.key" class="grid items-end gap-2" :class="amendOf ? 'grid-cols-[1fr_7rem_9rem_auto]' : 'grid-cols-[1fr_9rem_auto]'">
+					<div v-for="(row, i) in doc.accounts" :key="row.key" class="grid items-end gap-2" :class="amendOf ? 'grid-cols-[minmax(0,1fr)_7rem_9rem_auto]' : 'grid-cols-[minmax(0,1fr)_9rem_auto]'">
 						<LinkField v-model="row.account" doctype="Account" :label="i === 0 ? 'Account' : undefined" :filters="{ company: session.company, is_group: 0, root_type: 'Expense' }" />
 						<div v-if="amendOf" class="pb-1.5 text-right text-sm tabular-nums text-ink-gray-5">
 							<span v-if="i === 0" class="mb-1.5 block text-xs">Current</span>
@@ -50,7 +50,7 @@
 				</div>
 			</fieldset>
 
-			<fieldset v-if="doc.budget_period === 'Monthly'" class="rounded-xl border border-outline-gray-1 p-4">
+			<fieldset v-if="doc.budget_period === 'Monthly'" class="card p-4">
 				<legend class="px-1 text-base font-semibold">Monthly split</legend>
 				<div v-if="!doc.monthly_distribution.length" class="flex flex-wrap items-center justify-between gap-2">
 					<p class="text-sm text-ink-gray-6">Each month gets an even share of the annual amount.</p>

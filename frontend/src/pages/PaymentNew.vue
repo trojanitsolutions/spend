@@ -3,7 +3,7 @@
 		<PageHeader title="Pay Supplier" subtitle="Settles open bills from a cash or bank account" :back="{ to: '/payments', label: 'Payments' }" />
 
 		<form class="mx-auto max-w-4xl space-y-6 p-4 sm:p-6" @submit.prevent="pay">
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Payment</legend>
 				<LinkField
 					v-model="doc.supplier"
@@ -36,7 +36,7 @@
 				/>
 			</fieldset>
 
-			<fieldset class="rounded-xl border border-outline-gray-1">
+			<fieldset class="card">
 				<legend class="ml-4 px-1 text-base font-semibold">Open bills</legend>
 				<p v-if="!doc.supplier" class="px-4 py-8 text-center text-sm text-ink-gray-5">Select a supplier to see what you owe them.</p>
 				<div v-else-if="loadingBills" class="px-4 py-8 text-center"><LoadingText /></div>

@@ -10,4 +10,6 @@ interface Window {
 	/** from Frappe's logo settings, set by spend/www/spend.py */
 	favicon?: string
 	app_logo?: string
+	/** the active Frontend Template, set by spend/www/spend.py */
+	theme?: import("./theme").FrontendTemplate
 }

@@ -7,7 +7,7 @@
 		/>
 
 		<form class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6" @submit.prevent="save(true)">
-			<fieldset v-if="mode === 'simple'" class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset v-if="mode === 'simple'" class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Expense</legend>
 				<FormControl v-model="simple.amount" v-tour="{ key: 'expense.amount', value: simple.amount }" type="number" :label="repeat ? 'Amount each time' : 'Amount'" min="0" step="0.01" required />
 				<FormControl v-model="posting_date" type="date" label="Date" required />
@@ -44,7 +44,7 @@
 				/>
 			</fieldset>
 
-			<fieldset v-if="mode === 'simple' && repeat" class="space-y-4 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset v-if="mode === 'simple' && repeat" class="space-y-4 card p-4">
 				<legend class="px-1 text-base font-semibold">Repeat on</legend>
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<LinkField
@@ -71,13 +71,13 @@
 				</p>
 			</fieldset>
 
-			<fieldset v-else-if="mode === 'journal'" class="space-y-3 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset v-else-if="mode === 'journal'" class="space-y-3 card p-4">
 				<legend class="px-1 text-base font-semibold">Journal lines</legend>
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<FormControl v-model="posting_date" type="date" label="Date" required />
 					<FormControl v-model="remark" label="Description" />
 				</div>
-				<div v-for="(row, i) in lines" :key="row.key" class="grid grid-cols-1 gap-2 rounded-lg bg-surface-gray-1 p-3 sm:grid-cols-[1fr_1fr_1fr_7rem_7rem_auto] sm:items-end sm:bg-transparent sm:p-0">
+				<div v-for="(row, i) in lines" :key="row.key" class="grid grid-cols-1 gap-2 rounded-lg bg-surface-gray-1 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_7rem_7rem_auto] sm:items-end sm:bg-transparent sm:p-0">
 					<LinkField
 						v-model="row.account"
 						doctype="Account"

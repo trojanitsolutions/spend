@@ -1,6 +1,7 @@
 import { computed, reactive } from "vue"
 import { dialog } from "frappe-ui"
 import { api, applyAction, APPROVAL, submitDoc } from "./api"
+import { applyTheme } from "./theme"
 
 interface Company {
 	name: string
@@ -150,6 +151,7 @@ async function fetchSession() {
 			isTrainer: boot.is_trainer,
 			defaultCurrency: boot.default_currency,
 		})
+		applyTheme(boot.theme)
 		const names = boot.companies.map((c: Company) => c.name)
 		const stored = readStoredCompany()
 		// the training company is only opened on purpose, never as the fallback

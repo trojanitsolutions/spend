@@ -13,7 +13,7 @@
 
 		<div v-if="loading" class="p-6"><LoadingText /></div>
 		<form v-else class="mx-auto max-w-4xl space-y-6 p-4 sm:p-6" @submit.prevent="save(false)">
-			<fieldset v-if="amendOf" class="space-y-3 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset v-if="amendOf" class="space-y-3 card p-4">
 				<legend class="px-1 text-base font-semibold">Amendment</legend>
 				<p v-if="paidBefore?.payments" class="rounded-lg bg-surface-gray-2 p-3 text-sm text-ink-gray-7">
 					{{ amendOf }} already paid {{ fmt(paidBefore.paid_amount) }} in {{ paidBefore.payments }} {{ paidBefore.payments === 1 ? "payment" : "payments" }}, the last on
@@ -21,7 +21,7 @@
 				</p>
 				<FormControl v-model="doc.amendment_reason" type="textarea" label="Reason for amendment" required placeholder="What changed and why? Approvers see this." />
 			</fieldset>
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Payment</legend>
 				<FormControl v-model="doc.title" label="Title" required placeholder="e.g. Office rent" />
 				<FormControl v-model="doc.payee" label="Payee" placeholder="Landlord, provider… (optional)" />
@@ -65,7 +65,7 @@
 				/>
 			</fieldset>
 
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Schedule</legend>
 				<FormControl v-model="doc.from_date" type="date" label="From date" required />
 				<FormControl v-model="doc.to_date" type="date" label="To date" required />
@@ -76,7 +76,7 @@
 				<FormControl v-model="doc.total_amount" type="number" min="0" step="0.01" label="Total amount" required :class="{ over }" description="Split across the payment dates" />
 			</fieldset>
 
-			<fieldset class="rounded-xl border border-outline-gray-1">
+			<fieldset class="card">
 				<legend class="ml-4 px-1 text-base font-semibold">Payments</legend>
 				<template v-if="custom">
 					<ScheduleTable class="p-4" :rows="customRows" :placeholder="evenShare">

@@ -1,5 +1,5 @@
 <template>
-	<div class="flex flex-wrap items-end gap-2 px-4 pb-3 sm:px-6">
+	<div class="flex flex-wrap items-end gap-3 px-4 pb-4 pt-1 sm:px-6">
 		<template v-for="f in fields" :key="f.key">
 			<template v-if="f.type === 'date-range'">
 				<FormControl

@@ -33,7 +33,7 @@
 					<StatCard label="Due" :value="date(bill.due_date)" :tone="bill.status === 'Overdue' ? 'red' : undefined" :hint="dueHint" />
 				</div>
 
-				<section class="rounded-xl border border-outline-gray-1">
+				<section class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Items</h2>
 					<DataTable class="mt-2" :columns="itemColumns" :rows="bill.items">
 						<template #item_code="{ row }">
@@ -50,7 +50,7 @@
 					<div class="flex justify-end border-t border-outline-gray-1 px-4 py-3 text-base font-semibold tabular-nums sm:px-6">Total {{ fmt(bill.grand_total) }}</div>
 				</section>
 
-				<section v-if="detail.assets.length" class="rounded-xl border border-outline-gray-1">
+				<section v-if="detail.assets.length" class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Assets from this bill</h2>
 					<DataTable class="mt-2" :columns="assetColumns" :rows="detail.assets" clickable @row-click="(r) => $router.push(`/assets/${r.name}`)">
 						<template #status="{ value }"><StatusBadge :status="value" /></template>
@@ -58,7 +58,7 @@
 				</section>
 
 				<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-					<section class="rounded-xl border border-outline-gray-1 p-4">
+					<section class="card p-4">
 						<h2 class="mb-3 text-base font-semibold">Details</h2>
 						<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
 							<template v-for="[label, value] in details" :key="label">
@@ -67,7 +67,7 @@
 							</template>
 						</dl>
 					</section>
-					<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
+					<section class="card lg:col-span-2">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
 						<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments yet" @row-click="(r) => $router.push(`/payments/${r.name}`)">
 							<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>

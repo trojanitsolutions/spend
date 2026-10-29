@@ -9,7 +9,7 @@
 
 		<form class="mx-auto grid max-w-5xl grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-5" @submit.prevent="save(false)">
 			<div class="space-y-6 lg:col-span-3">
-				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4">
+				<fieldset class="space-y-4 card p-4">
 					<legend class="px-1 text-base font-semibold">Asset</legend>
 					<FormControl v-model="doc.asset_name" label="Asset name" required placeholder="e.g. MacBook Pro 14" />
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -24,7 +24,7 @@
 					</div>
 				</fieldset>
 
-				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4">
+				<fieldset class="space-y-4 card p-4">
 					<legend class="px-1 text-base font-semibold">Depreciation</legend>
 					<FormControl v-model="doc.calculate_depreciation" type="checkbox" label="Calculate depreciation" />
 					<template v-if="doc.calculate_depreciation">
@@ -48,7 +48,7 @@
 					</template>
 				</fieldset>
 
-				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4">
+				<fieldset class="space-y-4 card p-4">
 					<legend class="px-1 text-base font-semibold">Accounts</legend>
 					<p class="text-sm text-ink-gray-5">Prefilled from the company defaults.</p>
 					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -61,7 +61,7 @@
 			</div>
 
 			<aside class="lg:col-span-2">
-				<div class="sticky top-4 rounded-xl border border-outline-gray-1 p-4">
+				<div class="sticky top-24 card p-4">
 					<h2 class="text-base font-semibold">Schedule preview</h2>
 					<p class="mb-3 text-sm text-ink-gray-5">Estimated in the browser. The saved schedule is computed on the server.</p>
 					<p v-if="preview.error" class="text-sm text-ink-red-4">{{ preview.error }}</p>

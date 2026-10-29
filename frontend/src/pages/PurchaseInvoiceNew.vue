@@ -8,7 +8,7 @@
 		</PageHeader>
 
 		<form class="mx-auto max-w-4xl space-y-6 p-4 sm:p-6" @submit.prevent="save(false)">
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Bill</legend>
 				<LinkField v-model="doc.supplier" v-tour="{ key: 'bill.supplier', value: doc.supplier }" doctype="Supplier" label="Supplier" required :filters="{ disabled: 0 }" />
 				<FormControl v-model="doc.bill_no" v-tour="'bill.bill_no'" label="Supplier invoice no." placeholder="As printed on the bill" />
@@ -19,10 +19,10 @@
 				<LinkField v-model="doc.project" v-tour="{ key: 'bill.project', value: doc.project }" doctype="Project" label="Project" description="Tags every line without its own project" :filters="projectFilters" />
 			</fieldset>
 
-			<fieldset class="space-y-3 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset class="space-y-3 card p-4">
 				<legend class="px-1 text-base font-semibold">Items</legend>
 				<div v-for="(item, i) in items" :key="item.key" class="space-y-2 rounded-lg bg-surface-gray-1 p-3 sm:bg-transparent sm:p-0" :class="{ 'sm:border-t sm:border-outline-gray-1 sm:pt-3': i > 0 }">
-					<div class="grid grid-cols-2 gap-2 sm:grid-cols-[2fr_5rem_6rem_7rem_7rem_auto] sm:items-end">
+					<div class="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,2fr)_5rem_6rem_7rem_minmax(7rem,max-content)_auto] sm:items-end">
 						<div class="col-span-2 flex items-end gap-1 sm:col-span-1">
 							<LinkField
 								class="min-w-0 flex-1"
@@ -46,7 +46,7 @@
 							@update:model-value="(uom: string) => setUom(item, uom)"
 						/>
 						<FormControl v-model="item.rate" v-tour="{ key: lineKey('rate', i), value: item.rate }" type="number" min="0" step="0.01" :label="i === 0 ? `Rate${item.uom ? ' / ' + item.uom : ''}` : undefined" placeholder="0.00" />
-						<div class="flex h-7 items-center justify-end text-base tabular-nums text-ink-gray-8" :class="{ 'sm:mt-5': i === 0 }" :title="i === 0 ? 'Amount' : undefined">
+						<div class="flex h-7 min-w-0 items-center justify-end whitespace-nowrap text-base tabular-nums text-ink-gray-8" :class="{ 'sm:mt-5': i === 0 }" :title="i === 0 ? 'Amount' : undefined">
 							{{ fmt(amount(item)) }}
 						</div>
 						<div class="col-span-2 flex justify-end gap-1 sm:col-span-1">

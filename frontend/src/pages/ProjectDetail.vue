@@ -49,11 +49,11 @@
 				<div class="max-w-full overflow-x-auto"><TabButtons v-model="tab" :options="tabs" /></div>
 
 				<template v-if="tab === 'overview'">
-					<section v-if="detail.utilization !== null" class="rounded-xl border border-outline-gray-1 p-4">
+					<section v-if="detail.utilization !== null" class="card p-4">
 						<UsageBar :value="detail.utilization" label="Budget used" :caption="`${fmt(detail.spent)} / ${fmt(project.budget_amount)}`" />
 					</section>
 
-					<section v-if="detail.accounts.length" class="rounded-xl border border-outline-gray-1">
+					<section v-if="detail.accounts.length" class="card">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Account limits</h2>
 						<DataTable class="mt-2" row-key="account" :columns="accountColumns" :rows="detail.accounts">
 							<template #account="{ row }">
@@ -65,7 +65,7 @@
 						</DataTable>
 					</section>
 
-					<section v-if="detail.categories.length" class="rounded-xl border border-outline-gray-1">
+					<section v-if="detail.categories.length" class="card">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Expense categories</h2>
 						<DataTable class="mt-2" :row-key="'key'" :columns="categoryColumns" :rows="categoryRows">
 							<template #category="{ row }">
@@ -80,27 +80,35 @@
 						</DataTable>
 					</section>
 
-					<section v-if="detail.monthly.rows.length" class="rounded-xl border border-outline-gray-1">
-						<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
-							<h2 class="text-base font-semibold">Charged each month by category</h2>
-							<Button variant="ghost" icon-left="lucide-chart-column" label="Full report" @click="$router.push({ path: '/reports/project-category-monthly', query: { project: project.name } })" />
+					<section v-if="detail.costing.Monthly.rows.length" class="card">
+						<div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6">
+							<h2 class="text-base font-semibold">Charged by category</h2>
+							<div class="flex items-center gap-2">
+								<TabButtons v-model="costingPeriod" :options="PERIODS.map((p) => ({ label: p, value: p }))" />
+								<Button
+									variant="ghost"
+									icon-left="lucide-chart-column"
+									label="Full report"
+									@click="$router.push({ path: '/reports/project-category-monthly', query: { project: project.name, period: costingPeriod } })"
+								/>
+							</div>
 						</div>
 						<div class="mt-2 overflow-x-auto">
 							<table class="w-full text-sm">
 								<thead>
 									<tr class="border-b border-outline-gray-1 text-left text-ink-gray-5">
-										<th class="sticky left-0 bg-surface-white px-4 py-2 font-normal sm:px-6">Category</th>
-										<th v-for="month in detail.monthly.months" :key="month" class="whitespace-nowrap px-3 py-2 text-right font-normal">{{ monthLabel(month) }}</th>
+										<th class="sticky left-0 bg-[var(--surface-elevation-1)] px-4 py-2 font-normal sm:px-6">Category</th>
+										<th v-for="p in costing.periods" :key="p.key" class="whitespace-nowrap px-3 py-2 text-right font-normal">{{ p.label }}</th>
 										<th class="px-4 py-2 text-right font-normal sm:pr-6">Total</th>
 									</tr>
 								</thead>
 								<tbody>
-									<tr v-for="row in detail.monthly.rows" :key="`${row.category}|${row.sub_category || ''}`" class="border-b border-outline-gray-1 last:border-0">
+									<tr v-for="row in costing.rows" :key="`${row.category}|${row.sub_category || ''}`" class="border-b border-outline-gray-1 last:border-0">
 										<td class="sticky left-0 whitespace-nowrap bg-surface-white px-4 py-2 sm:px-6" :class="row.indent ? 'pl-8 text-ink-gray-6 sm:pl-10' : 'font-medium text-ink-gray-9'">
 											{{ row.sub_category || row.category }}
 										</td>
-										<td v-for="month in detail.monthly.months" :key="month" class="px-3 py-2 text-right tabular-nums" :class="row.months[month] ? 'text-ink-gray-8' : 'text-ink-gray-4'">
-											{{ row.months[month] ? fmt(row.months[month]) : "—" }}
+										<td v-for="p in costing.periods" :key="p.key" class="px-3 py-2 text-right tabular-nums" :class="row.months[p.key] ? 'text-ink-gray-8' : 'text-ink-gray-4'">
+											{{ row.months[p.key] ? fmt(row.months[p.key]) : "—" }}
 										</td>
 										<td class="px-4 py-2 text-right font-medium tabular-nums text-ink-gray-9 sm:pr-6">{{ fmt(row.total) }}</td>
 									</tr>
@@ -109,7 +117,7 @@
 						</div>
 					</section>
 
-					<section class="rounded-xl border border-outline-gray-1 p-4">
+					<section class="card p-4">
 						<h2 class="mb-3 text-base font-semibold">Details</h2>
 						<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
 							<template v-for="[label, value] in details" :key="label">
@@ -124,7 +132,7 @@
 				</template>
 
 				<template v-else-if="tab === 'tasks'">
-					<section class="rounded-xl border border-outline-gray-1">
+					<section class="card">
 						<div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6">
 							<div>
 								<h2 class="text-base font-semibold">Tasks</h2>
@@ -170,7 +178,7 @@
 				</template>
 
 				<template v-else-if="tab === 'bills'">
-					<section class="rounded-xl border border-outline-gray-1">
+					<section class="card">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Bills</h2>
 						<DataTable class="mt-2" :columns="billColumns" :rows="detail.bills" clickable empty-text="No bills for this project yet" @row-click="(r) => $router.push(`/bills/${r.name}`)">
 							<template #supplier="{ row }">
@@ -191,14 +199,14 @@
 						</DataTable>
 					</section>
 
-					<section class="rounded-xl border border-outline-gray-1">
+					<section class="card">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
 						<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments tagged with this project" @row-click="(r) => $router.push(`/payments/${r.name}`)">
 							<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
 						</DataTable>
 					</section>
 
-					<section v-if="detail.recurring.length || can('Recurring Payment', 'create')" class="rounded-xl border border-outline-gray-1">
+					<section v-if="detail.recurring.length || can('Recurring Payment', 'create')" class="card">
 						<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
 							<h2 class="text-base font-semibold">Recurring payments</h2>
 							<Button
@@ -225,7 +233,7 @@
 						<StatCard label="Accumulated depreciation" :value="fmt(assetTotal('accumulated_depreciation'))" hint="Charged to the project" />
 						<StatCard label="Book value" :value="fmt(assetTotal('value_after_depreciation'))" />
 					</div>
-					<section class="rounded-xl border border-outline-gray-1">
+					<section class="card">
 						<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
 							<h2 class="text-base font-semibold">Assets</h2>
 							<div v-if="project.status === 'Open' && usable" class="flex gap-1">
@@ -261,7 +269,7 @@
 						</DataTable>
 					</section>
 
-					<section v-if="detail.past_assets.length" class="rounded-xl border border-outline-gray-1">
+					<section v-if="detail.past_assets.length" class="card">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Previously on this project</h2>
 						<DataTable class="mt-2" :columns="pastAssetColumns" :rows="detail.past_assets" clickable @row-click="(r) => $router.push(`/assets/${r.name}`)">
 							<template #asset_name="{ row }">
@@ -391,9 +399,14 @@ const categoryColumns: Column[] = [
 ]
 const categoryRows = computed(() => detail.value.categories.map((r: any) => ({ ...r, key: `${r.category}|${r.sub_category || ""}` })))
 
-function monthLabel(month: string) {
-	return new Date(`${month}-01T00:00:00`).toLocaleDateString(undefined, { month: "short", year: "numeric" })
-}
+// charge by month, fiscal quarter or fiscal year; kept in the URL like the tab
+const PERIODS = ["Monthly", "Quarterly", "Yearly"] as const
+type Period = (typeof PERIODS)[number]
+const costingPeriod = computed<Period>({
+	get: () => PERIODS.find((p) => p.toLowerCase() === route.query.costing) || "Monthly",
+	set: (value) => router.replace({ query: { ...route.query, costing: value === "Monthly" ? undefined : value.toLowerCase() } }),
+})
+const costing = computed(() => detail.value.costing[costingPeriod.value])
 
 const billColumns: Column[] = [
 	{ key: "supplier", label: "Supplier" },

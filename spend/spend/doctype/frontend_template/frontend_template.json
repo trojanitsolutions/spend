@@ -1,0 +1,196 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:template_name",
+ "creation": "2026-10-28 15:00:00.000000",
+ "description": "The look of the Spend app at /spend. One template is active for everyone.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "template_name",
+  "is_active",
+  "column_break_main",
+  "is_standard",
+  "description",
+  "section_break_branding",
+  "app_title",
+  "app_logo",
+  "column_break_branding",
+  "favicon",
+  "section_break_theme",
+  "color_mode",
+  "primary_color",
+  "sidebar_color",
+  "column_break_theme",
+  "font_family",
+  "corner_style",
+  "density",
+  "section_break_css",
+  "custom_css"
+ ],
+ "fields": [
+  {
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "label": "Template Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "0",
+   "description": "Activating this template deactivates the others.",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_standard",
+   "fieldtype": "Check",
+   "label": "Is Standard",
+   "read_only": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_break_branding",
+   "fieldtype": "Section Break",
+   "label": "Branding"
+  },
+  {
+   "default": "Spend",
+   "fieldname": "app_title",
+   "fieldtype": "Data",
+   "label": "App Title",
+   "reqd": 1
+  },
+  {
+   "description": "Leave empty to use the logo from Website Settings or Navbar Settings.",
+   "fieldname": "app_logo",
+   "fieldtype": "Attach Image",
+   "label": "App Logo"
+  },
+  {
+   "fieldname": "column_break_branding",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Leave empty to use the favicon from Website Settings.",
+   "fieldname": "favicon",
+   "fieldtype": "Attach Image",
+   "label": "Favicon"
+  },
+  {
+   "fieldname": "section_break_theme",
+   "fieldtype": "Section Break",
+   "label": "Theme"
+  },
+  {
+   "default": "Light",
+   "fieldname": "color_mode",
+   "fieldtype": "Select",
+   "label": "Color Mode",
+   "options": "Light\nDark\nSystem"
+  },
+  {
+   "description": "Solid buttons and highlights. Leave empty for the standard dark gray.",
+   "fieldname": "primary_color",
+   "fieldtype": "Color",
+   "label": "Primary Color"
+  },
+  {
+   "description": "Background of the sidebar. Leave empty for the standard light gray.",
+   "fieldname": "sidebar_color",
+   "fieldtype": "Color",
+   "label": "Sidebar Color"
+  },
+  {
+   "fieldname": "column_break_theme",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Inter",
+   "fieldname": "font_family",
+   "fieldtype": "Select",
+   "label": "Font",
+   "options": "Inter\nSystem\nArial\nSerif\nMono"
+  },
+  {
+   "default": "Default",
+   "fieldname": "corner_style",
+   "fieldtype": "Select",
+   "label": "Corners",
+   "options": "Default\nSharp\nRounded"
+  },
+  {
+   "default": "Comfortable",
+   "fieldname": "density",
+   "fieldtype": "Select",
+   "label": "Density",
+   "options": "Comfortable\nCompact"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_css",
+   "fieldtype": "Section Break",
+   "label": "Custom CSS"
+  },
+  {
+   "description": "Added after the theme, for changes the fields above do not cover.",
+   "fieldname": "custom_css",
+   "fieldtype": "Code",
+   "label": "Custom CSS",
+   "options": "CSS"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-28 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "spend",
+ "name": "Frontend Template",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "template_name",
+ "track_changes": 1
+}

@@ -1,5 +1,5 @@
 <template>
-	<section v-if="info" class="rounded-xl border border-outline-gray-1 p-4">
+	<section v-if="info" class="card p-4">
 		<div class="flex flex-wrap items-center gap-3">
 			<span class="lucide-shield-check size-5 text-ink-gray-5" aria-hidden="true" />
 			<div class="min-w-0 flex-1">

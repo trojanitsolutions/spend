@@ -1,1 +1,110 @@
 @import "frappe-ui/style.css";
+
+@layer base {
+	/* the page background behind cards; a template can set it apart from --surface-base */
+	:root,
+	[data-theme="dark"] {
+		--canvas: var(--surface-base);
+		/* the selected sidebar row and accent text such as back links */
+		--accent-tint: var(--surface-base);
+		--accent-ink: var(--ink-gray-9);
+	}
+
+	html {
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
+	}
+
+	/* a long amount in a label/value list wraps inside its card instead of running out of it */
+	dd {
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+
+	/* keyboard focus is always visible; mouse clicks show nothing */
+	:focus-visible {
+		outline: 2px solid var(--surface-gray-10);
+		outline-offset: 2px;
+	}
+}
+
+@layer components {
+	/* a grouped content card: elevated surface, hairline edge and a soft shadow */
+	.card {
+		border-radius: 1rem;
+		border: 1px solid var(--outline-gray-1);
+		background-color: var(--surface-elevation-1);
+		box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.02);
+	}
+
+	/* a list page's table (directly under the page, not already in a card) sits in its own inset card */
+	main > * > .data-table {
+		margin: 0 1rem 1.5rem;
+		border-radius: 1rem;
+		border: 1px solid var(--outline-gray-1);
+		background-color: var(--surface-elevation-1);
+		box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 1px rgb(0 0 0 / 0.02);
+	}
+
+	@media (min-width: 640px) {
+		main > * > .data-table {
+			margin: 0 1.5rem 1.5rem;
+		}
+	}
+
+	/* the translucent bar that content scrolls under (page title, mobile header) */
+	.bar-glass {
+		background-color: color-mix(in srgb, var(--canvas) 80%, transparent);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
+		backdrop-filter: saturate(180%) blur(20px);
+	}
+}
+
+/* a dark sidebar color (Frontend Template): light text, translucent hovers and a white selected row */
+.sidebar-dark {
+	--ink-gray-9: #ffffff;
+	--ink-gray-8: rgb(255 255 255 / 0.92);
+	--ink-gray-6: rgb(255 255 255 / 0.75);
+	--ink-gray-5: rgb(255 255 255 / 0.65);
+	--surface-gray-2: rgb(255 255 255 / 0.12);
+	--outline-gray-1: rgb(255 255 255 / 0.15);
+	--accent-tint: #ffffff;
+	--accent-ink: var(--surface-gray-10);
+	border-right-color: transparent;
+}
+
+/* the logo tile and count badges would be blue on blue */
+.sidebar-dark .bg-surface-gray-10 {
+	background-color: rgb(255 255 255 / 0.18);
+}
+
+.sidebar-dark .nav-active .bg-surface-gray-10 {
+	background-color: var(--surface-gray-10);
+}
+
+.sidebar-dark select {
+	color: #1f2937;
+}
+
+/* Compact density (Frontend Template): spacing is in rem and text in px, so this tightens padding and gaps, not text */
+html.density-compact {
+	font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+	}
+}
+
+@media (prefers-reduced-transparency: reduce) {
+	.bar-glass {
+		background-color: var(--canvas);
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+}

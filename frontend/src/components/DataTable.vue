@@ -1,13 +1,13 @@
 <template>
-	<div class="overflow-x-auto">
+	<div class="data-table overflow-x-auto">
 		<table class="w-full min-w-max text-left text-base">
 			<thead>
-				<tr class="border-b border-outline-gray-1 text-sm text-ink-gray-5">
+				<tr class="border-b border-outline-gray-1 text-xs text-ink-gray-5">
 					<th
 						v-for="col in columns"
 						:key="col.key"
 						scope="col"
-						class="whitespace-nowrap px-3 py-2 font-medium first:pl-4 last:pr-4 sm:first:pl-6 sm:last:pr-6"
+						class="whitespace-nowrap px-3 py-2.5 font-medium first:pl-4 last:pr-4 sm:first:pl-6 sm:last:pr-6"
 						:class="{ 'text-right': col.align === 'right' }"
 					>
 						{{ col.label }}
@@ -25,7 +25,7 @@
 					v-for="(row, i) in rows"
 					:key="row[rowKey] ?? i"
 					class="border-b border-outline-gray-1 last:border-0"
-					:class="[{ 'cursor-pointer hover:bg-surface-gray-1': clickable }, rowClass?.(row)]"
+					:class="[{ 'cursor-pointer transition-colors hover:bg-surface-gray-1 focus-visible:bg-surface-gray-1 focus-visible:outline-offset-[-2px]': clickable }, rowClass?.(row)]"
 					:tabindex="clickable ? 0 : undefined"
 					@click="clickable && $emit('row-click', row)"
 					@keydown.enter="clickable && $emit('row-click', row)"
@@ -33,7 +33,7 @@
 					<td
 						v-for="col in columns"
 						:key="col.key"
-						class="whitespace-nowrap px-3 py-2.5 first:pl-4 last:pr-4 sm:first:pl-6 sm:last:pr-6"
+						class="h-11 whitespace-nowrap px-3 py-2 first:pl-4 last:pr-4 sm:first:pl-6 sm:last:pr-6"
 						:class="[{ 'text-right tabular-nums': col.align === 'right' }, col.class]"
 					>
 						<slot :name="col.key" :row="row" :value="row[col.key]">{{ col.format ? col.format(row[col.key], row) : row[col.key] }}</slot>

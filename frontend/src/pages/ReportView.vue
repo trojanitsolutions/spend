@@ -36,7 +36,7 @@
 			<StatCard v-for="s in result.report_summary" :key="s.label" :label="s.label" :value="formatSummary(s)" />
 		</div>
 
-		<section v-if="chart" class="mx-4 mt-4 rounded-xl border border-outline-gray-1 p-4 sm:mx-6">
+		<section v-if="chart" class="mx-4 mt-4 card p-4 sm:mx-6">
 			<BarChart :labels="chart.labels" :series="chart.series" :format="chart.format" />
 		</section>
 

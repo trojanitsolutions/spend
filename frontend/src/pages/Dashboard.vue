@@ -52,7 +52,7 @@
 			</div>
 
 			<div v-if="data.spending_trend || data.budget" class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-				<section v-if="data.spending_trend" class="rounded-xl border border-outline-gray-1 p-4 xl:col-span-2">
+				<section v-if="data.spending_trend" class="card p-4 xl:col-span-2">
 					<h2 class="mb-4 text-base font-semibold">Monthly spending</h2>
 					<BarChart
 						:labels="data.spending_trend.map((m: any) => m.month)"
@@ -61,7 +61,7 @@
 					/>
 				</section>
 
-				<section v-if="data.budget" class="rounded-xl border border-outline-gray-1 p-4">
+				<section v-if="data.budget" class="card p-4">
 					<div class="mb-4 flex items-center justify-between">
 						<h2 class="text-base font-semibold">Budgets to watch</h2>
 						<RouterLink to="/budgets" class="text-sm text-ink-gray-5 hover:text-ink-gray-8">All budgets</RouterLink>
@@ -75,7 +75,7 @@
 				</section>
 			</div>
 
-			<section v-if="data.projects?.open" class="rounded-xl border border-outline-gray-1 p-4">
+			<section v-if="data.projects?.open" class="card p-4">
 				<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
 					<h2 class="text-base font-semibold">
 						Projects
@@ -94,7 +94,7 @@
 				</div>
 			</section>
 
-			<section v-if="data.upcoming_payments.length" class="rounded-xl border border-outline-gray-1">
+			<section v-if="data.upcoming_payments.length" class="card">
 				<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
 					<h2 class="text-base font-semibold">Upcoming recurring payments <span class="ml-2 text-sm font-normal text-ink-gray-5">next 30 days</span></h2>
 					<RouterLink to="/recurring" class="text-sm text-ink-gray-5 hover:text-ink-gray-8">All recurring</RouterLink>
@@ -117,7 +117,7 @@
 			</section>
 
 			<div v-if="data.top_cost_centers || data.recent_entries" class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-				<section v-if="data.top_cost_centers" class="rounded-xl border border-outline-gray-1">
+				<section v-if="data.top_cost_centers" class="card">
 					<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
 						<h2 class="text-base font-semibold">Top cost centers</h2>
 						<RouterLink to="/cost-centers" class="text-sm text-ink-gray-5 hover:text-ink-gray-8">View tree</RouterLink>
@@ -134,7 +134,7 @@
 						empty-text="No spending recorded this year"
 					/>
 				</section>
-				<section v-if="data.recent_entries" class="rounded-xl border border-outline-gray-1">
+				<section v-if="data.recent_entries" class="card">
 					<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
 						<h2 class="text-base font-semibold">Recent entries</h2>
 						<div class="flex gap-3 text-sm text-ink-gray-5">

@@ -9,7 +9,7 @@
 						v-for="r in reports.filter((r) => r.group === group)"
 						:key="r.slug"
 						:to="`/reports/${r.slug}`"
-						class="group rounded-xl border border-outline-gray-1 p-4 transition-colors hover:border-outline-gray-3 hover:bg-surface-gray-1"
+						class="group card p-4 transition-colors hover:border-outline-gray-3 hover:bg-surface-gray-1"
 					>
 						<span :class="[r.icon, 'size-5 text-ink-gray-6']" aria-hidden="true" />
 						<div class="mt-3 font-medium text-ink-gray-9">{{ r.name.replace(' Report', '') }}</div>

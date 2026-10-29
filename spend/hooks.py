@@ -107,11 +107,19 @@ website_route_rules = [
 # ------------
 
 # before_install = "spend.install.before_install"
-after_install = ["spend.spend.setup.after_install", "spend.training.setup.after_install"]
+after_install = [
+	"spend.spend.setup.after_install",
+	"spend.training.setup.after_install",
+	"spend.spend.doctype.frontend_template.frontend_template.create_default_template",
+]
 # the workflow fixtures are imported after install and on every migrate; these put back
 # the approval switches from Spend Settings over them
 after_sync = "spend.spend.approval.apply_settings"
-after_migrate = ["spend.spend.approval.apply_settings", "spend.training.setup.after_migrate"]
+after_migrate = [
+	"spend.spend.approval.apply_settings",
+	"spend.training.setup.after_migrate",
+	"spend.spend.doctype.frontend_template.frontend_template.create_default_template",
+]
 
 # Uninstallation
 # ------------

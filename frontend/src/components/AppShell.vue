@@ -1,30 +1,32 @@
 <template>
-	<div class="flex h-screen bg-surface-base text-ink-gray-8">
+	<div class="flex h-screen bg-[var(--canvas)] text-ink-gray-8">
 		<!-- sidebar -->
 		<aside
 			:class="[
 				'fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-outline-gray-1 bg-surface-gray-1 transition-transform md:static md:translate-x-0',
 				menuOpen ? 'translate-x-0' : '-translate-x-full',
+				{ 'sidebar-dark': theme.sidebarDark },
 			]"
+			:style="theme.sidebarColor ? { '--surface-gray-1': theme.sidebarColor } : undefined"
 		>
-			<div class="flex items-center gap-2 px-4 pb-3 pt-4">
-				<img v-if="appLogo" :src="appLogo" alt="" class="size-7 shrink-0 rounded-lg object-contain" @error="appLogo = ''" />
-				<div v-else class="flex size-7 items-center justify-center rounded-lg bg-surface-gray-9">
+			<div class="flex items-center gap-2.5 px-4 pb-4 pt-5">
+				<img v-if="appLogo" :src="appLogo" alt="" class="size-8 shrink-0 rounded-[9px] object-contain" @error="appLogo = ''" />
+				<div v-else class="flex size-8 items-center justify-center rounded-[9px] bg-surface-gray-10 shadow-sm">
 					<span class="lucide-wallet size-4 text-white" aria-hidden="true" />
 				</div>
 				<div class="min-w-0 flex-1">
-					<div class="text-base font-semibold leading-tight text-ink-gray-9">Spend</div>
+					<div class="truncate text-[15px] font-semibold leading-tight tracking-tight text-ink-gray-9">{{ theme.appTitle }}</div>
 					<div class="truncate text-xs text-ink-gray-5">{{ session.fullName }}</div>
 				</div>
 				<NotificationBell class="hidden md:block" />
 			</div>
 
-			<div class="px-3 pb-2">
+			<div class="px-3 pb-1">
 				<label class="sr-only" for="company-switcher">Company</label>
 				<select
 					id="company-switcher"
 					v-tour="'shell.company'"
-					class="form-select w-full text-sm"
+					class="form-select w-full rounded-lg text-[13px]"
 					:value="session.company"
 					@change="switchCompany(($event.target as HTMLSelectElement).value)"
 				>
@@ -32,9 +34,9 @@
 				</select>
 			</div>
 
-			<nav class="flex-1 overflow-y-auto px-2 pb-4">
+			<nav class="flex-1 overflow-y-auto px-3 pb-4">
 				<template v-for="group in visibleNav" :key="group.label">
-					<div v-if="group.label" class="px-2 pb-1 pt-4 text-xs font-medium uppercase tracking-wide text-ink-gray-4">
+					<div v-if="group.label" class="px-2 pb-1 pt-5 text-[11px] font-semibold text-ink-gray-5">
 						{{ group.label }}
 					</div>
 					<RouterLink
@@ -42,38 +44,38 @@
 						:key="item.to"
 						v-tour="navKey(item.to)"
 						:to="item.to"
-						class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-base text-ink-gray-7 transition-colors hover:bg-surface-gray-2"
-						:class="{ 'bg-surface-base font-medium text-ink-gray-9 shadow-sm hover:bg-surface-base': isActive(item.to) }"
+						class="flex h-8 items-center gap-2.5 rounded-lg px-2 text-[13px] text-ink-gray-8 transition-colors hover:bg-surface-gray-2"
+						:class="{ 'nav-active bg-[var(--accent-tint)] font-medium text-[var(--accent-ink)] shadow-sm hover:bg-[var(--accent-tint)]': isActive(item.to) }"
 						@click="menuOpen = false"
 					>
-						<span :class="[item.icon, 'size-4 shrink-0 text-ink-gray-6']" aria-hidden="true" />
+						<span :class="[item.icon, 'size-4 shrink-0', isActive(item.to) ? 'text-[var(--accent-ink)]' : 'text-ink-gray-6']" aria-hidden="true" />
 						<span class="flex-1">{{ item.label }}</span>
-						<span v-if="badges[item.to]" class="rounded-full bg-surface-amber-2 px-1.5 text-xs font-medium tabular-nums text-ink-amber-4">{{ badges[item.to] }}</span>
+						<span v-if="badges[item.to]" class="min-w-5 rounded-full bg-surface-gray-10 px-1.5 text-center text-[11px] font-semibold tabular-nums text-white">{{ badges[item.to] }}</span>
 					</RouterLink>
 				</template>
 			</nav>
 
-			<div class="space-y-0.5 border-t border-outline-gray-1 p-3">
-				<a v-if="deskAccess" href="/app/spend" class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-ink-gray-6 hover:bg-surface-gray-2">
+			<div class="space-y-0.5 border-t border-outline-gray-1 px-3 py-2">
+				<a v-if="deskAccess" href="/app/spend" class="flex h-8 items-center gap-2.5 rounded-lg px-2 text-[13px] text-ink-gray-6 hover:bg-surface-gray-2">
 					<span class="lucide-layout-grid size-4" aria-hidden="true" /> Open Desk
 				</a>
 				<button
 					type="button"
-					class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-ink-gray-6 hover:bg-surface-gray-2"
+					class="flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13px] text-ink-gray-6 hover:bg-surface-gray-2"
 					@click="logout"
 				>
 					<span class="lucide-log-out size-4" aria-hidden="true" /> Log out
 				</button>
 			</div>
 		</aside>
-		<div v-if="menuOpen" class="fixed inset-0 z-20 bg-black/30 md:hidden" @click="menuOpen = false" />
+		<div v-if="menuOpen" class="fixed inset-0 z-20 bg-black/30 backdrop-blur-[2px] md:hidden" @click="menuOpen = false" />
 
 		<!-- content -->
 		<div class="flex min-w-0 flex-1 flex-col">
-			<header class="flex items-center gap-3 border-b border-outline-gray-1 px-4 py-2.5 md:hidden">
+			<header class="bar-glass sticky top-0 z-20 flex items-center gap-3 border-b border-outline-gray-1 px-4 py-2 md:hidden">
 				<Button variant="ghost" icon="lucide-menu" aria-label="Open menu" @click="menuOpen = true" />
 				<img v-if="appLogo" :src="appLogo" alt="" class="size-6 shrink-0 rounded-md object-contain" @error="appLogo = ''" />
-				<span class="flex-1 font-semibold">Spend</span>
+				<span class="flex-1 truncate font-semibold">{{ theme.appTitle }}</span>
 				<NotificationBell />
 			</header>
 			<div v-if="inTrainingCompany" class="flex flex-wrap items-center gap-2 border-b border-outline-amber-2 bg-surface-amber-1 px-4 py-1.5 text-sm text-ink-amber-4 sm:px-6">
@@ -101,6 +103,7 @@ import { Button } from "frappe-ui"
 import NotificationBell from "@/components/NotificationBell.vue"
 import { counts, refreshCounts } from "@/notifications"
 import { canRead, canRunReport, deskAccess, hasDemoData, inTrainingCompany, logout, session, setCompany } from "@/store"
+import { theme } from "@/theme"
 import TrainingLayer from "@/training/TrainingLayer.vue"
 import { state } from "@/training/run"
 
@@ -178,8 +181,9 @@ function isVisible(item: NavItem) {
 
 const route = useRoute()
 const menuOpen = ref(false)
-// from Frappe's logo settings; the wallet icon shows if the image does not load
-const appLogo = ref(window.app_logo || "")
+// from the active template or Frappe's logo settings; the wallet icon shows if the image does not load
+const appLogo = ref(theme.appLogo)
+watch(() => theme.appLogo, (logo) => (appLogo.value = logo))
 const badges = computed<Record<string, number>>(() => ({ "/approvals": counts.pending, "/notifications": counts.unread }))
 
 // counts refresh on navigation and every minute

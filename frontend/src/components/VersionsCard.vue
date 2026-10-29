@@ -6,7 +6,7 @@
 		<span v-if="banner.reason" class="text-ink-gray-6">· {{ banner.reason }}</span>
 	</div>
 
-	<section v-if="versions.length > 1" class="rounded-xl border border-outline-gray-1">
+	<section v-if="versions.length > 1" class="card">
 		<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Versions</h2>
 		<ol class="mt-2 divide-y divide-outline-gray-1">
 			<li v-for="(v, i) in versions" :key="v.name" class="px-4 py-3 sm:px-6">

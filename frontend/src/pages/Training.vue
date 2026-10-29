@@ -31,7 +31,7 @@
 					<p v-if="track.description" class="text-sm text-ink-gray-5">{{ track.description }}</p>
 				</div>
 				<p v-if="!track.scenarios.length" class="text-sm text-ink-gray-5">No scenarios in this track yet.</p>
-				<ul class="divide-y divide-outline-gray-1 rounded-xl border border-outline-gray-1">
+				<ul class="divide-y divide-outline-gray-1 card">
 					<li v-for="s in track.scenarios" :key="s.name" class="flex flex-wrap items-center gap-3 px-4 py-3">
 						<div class="min-w-0 flex-1">
 							<div class="flex flex-wrap items-center gap-2">

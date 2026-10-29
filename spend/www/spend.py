@@ -2,6 +2,8 @@ from urllib.parse import quote
 
 import frappe
 
+from spend.spend.doctype.frontend_template.frontend_template import get_active_template
+
 no_cache = 1
 
 SPEND_LOGO = "/assets/spend/logo.svg"
@@ -19,6 +21,7 @@ def get_context(context):
 		"site_name": frappe.local.site,
 		"user": frappe.session.user,
 		**get_logos(),
+		"theme": get_active_template(),
 	}
 
 

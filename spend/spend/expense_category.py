@@ -280,9 +280,48 @@ def build_monthly(entries: list, months: list[str], categories: list | None = No
 	return rows
 
 
-def get_project_months(project) -> list[str]:
-	"""The months of the project up to today, at most the last 24."""
+def get_project_months(project, limit: int | None = 24) -> list[str]:
+	"""The months of the project up to today, at most the last `limit`; all of them when it is None."""
 	end = min(getdate(project.end_date or today()), getdate(today()))
 	start = getdate(project.start_date) if project.start_date else add_months(end, -11)
-	start = max(start, add_months(end, -23))
+	if limit:
+		start = max(start, add_months(end, 1 - limit))
 	return get_months(min(start, end), end)
+
+
+PERIODS = ("Monthly", "Quarterly", "Yearly")
+
+
+def get_periods(months: list[str], period: str) -> tuple[list[dict], dict]:
+	"""The periods covering `months` in order, and the period key of each month.
+
+	Quarters and years follow the Fiscal Year; a month outside every Fiscal Year uses the calendar.
+	"""
+	fiscal_years = []
+	if period != "Monthly":
+		fiscal_years = frappe.get_all(
+			"Fiscal Year", filters={"disabled": 0}, fields=["name", "start_date", "end_date"]
+		)
+	periods, keys = {}, {}
+	for month in months:
+		day = getdate(f"{month}-01")
+		if period == "Monthly":
+			key, label = month, day.strftime("%b %Y")
+		else:
+			fy = next((y for y in fiscal_years if getdate(y.start_date) <= day <= getdate(y.end_date)), None)
+			year, start_month = (fy.name, getdate(fy.start_date)) if fy else (str(day.year), day.replace(month=1))
+			if period == "Yearly":
+				key = label = year
+			else:
+				quarter = ((day.year - start_month.year) * 12 + day.month - start_month.month) // 3 + 1
+				key, label = f"{year}-Q{quarter}", f"Q{quarter} {year}"
+		periods.setdefault(key, {"key": key, "label": label})
+		keys[month] = key
+	return list(periods.values()), keys
+
+
+def build_periods(entries: list, months: list[str], period: str, categories: list | None = None) -> dict:
+	"""`build_monthly` with the months grouped into periods; each row's `months` is keyed by period."""
+	periods, keys = get_periods(months, period)
+	entries = [frappe._dict(entry, month=keys[entry.month]) for entry in entries if entry.month in keys]
+	return {"periods": periods, "rows": build_monthly(entries, [p["key"] for p in periods], categories)}

@@ -1,5 +1,5 @@
 <template>
-	<section class="rounded-xl border border-outline-gray-1 p-4 sm:px-6">
+	<section class="card p-4 sm:px-6">
 		<h2 class="mb-3 text-base font-semibold">Activity</h2>
 
 		<form class="mb-5 space-y-2" @submit.prevent="send">

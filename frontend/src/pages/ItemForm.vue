@@ -14,7 +14,7 @@
 
 		<DocLayout doctype="Item" :name="doc?.name" :version="doc?.modified">
 			<form :class="doc ? 'space-y-6' : 'mx-auto max-w-3xl space-y-6'" @submit.prevent="save">
-				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+				<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Item</legend>
 					<FormControl v-model="draft.item_code" label="Item code" required placeholder="e.g. CEMENT-OPC53" :disabled="!!doc" />
 					<FormControl v-model="draft.item_name" label="Item name" placeholder="Same as the code when empty" />
@@ -31,7 +31,7 @@
 					</div>
 				</fieldset>
 
-				<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2" :disabled="!canWrite">
+				<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Purchasing</legend>
 					<FormControl v-model="draft.standard_rate" type="number" min="0" step="0.01" :label="`Standard buying rate (per ${draft.stock_uom || 'unit'})`" description="Used until a supplier bills this item" />
 					<FormControl :model-value="doc?.last_purchase_rate ? fmt(doc.last_purchase_rate) : '—'" label="Last purchase rate" description="From the last submitted bill" disabled />
@@ -39,7 +39,7 @@
 					<FormControl v-if="draft.is_fixed_asset" v-model="draft.auto_create_assets" type="checkbox" label="Auto create assets on purchase" description="One draft asset per unit when a bill is submitted" />
 				</fieldset>
 
-				<fieldset class="space-y-4 rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
+				<fieldset class="space-y-4 card p-4" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Units of measure</legend>
 					<LinkField
 						v-model="draft.purchase_uom"
@@ -67,7 +67,7 @@
 					</div>
 				</fieldset>
 
-				<fieldset class="rounded-xl border border-outline-gray-1 p-4" :disabled="!canWrite">
+				<fieldset class="card p-4" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Description</legend>
 					<FormControl v-model="draft.description" type="textarea" :rows="4" placeholder="Filled in on bill lines" />
 				</fieldset>

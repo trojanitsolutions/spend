@@ -28,7 +28,7 @@
 				</div>
 				<p v-else class="rounded-lg bg-surface-gray-1 p-3 text-sm text-ink-gray-6">Actual spending is tracked once the budget is submitted.</p>
 
-				<section class="rounded-xl border border-outline-gray-1">
+				<section class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">By account</h2>
 					<DataTable class="mt-2" row-key="account" :columns="accountColumns" :rows="accountRows">
 						<template #utilization="{ row }"><div class="w-40"><UsageBar :value="row.utilization" :caption="percent(row.utilization)" /></div></template>
@@ -39,7 +39,7 @@
 					Projects and recurring payments hold {{ fmt(allocation.held) }} of {{ fmt(allocation.total) }} · {{ fmt(allocation.free) }} free
 				</p>
 
-				<section v-if="allocation?.projects.length" class="rounded-xl border border-outline-gray-1">
+				<section v-if="allocation?.projects.length" class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Projects</h2>
 					<DataTable class="mt-2" :columns="projectColumns" :rows="allocation.projects" clickable @row-click="(r) => $router.push(`/projects/${r.name}`)">
 						<template #project_name="{ row }">
@@ -50,7 +50,7 @@
 					</DataTable>
 				</section>
 
-				<section v-if="allocation?.recurring.length" class="rounded-xl border border-outline-gray-1">
+				<section v-if="allocation?.recurring.length" class="card">
 					<div class="flex flex-wrap items-baseline justify-between gap-2 px-4 pt-4 sm:px-6">
 						<h2 class="text-base font-semibold">Recurring payments</h2>
 						<span class="text-sm text-ink-gray-6">
@@ -72,7 +72,7 @@
 					</DataTable>
 				</section>
 
-				<section v-if="summary" class="rounded-xl border border-outline-gray-1 p-4 sm:p-6">
+				<section v-if="summary" class="card p-4 sm:p-6">
 					<h2 class="mb-4 text-base font-semibold">Month by month</h2>
 					<BarChart :labels="months.labels" :series="months.series" :format="fmt" />
 				</section>

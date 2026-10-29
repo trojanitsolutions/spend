@@ -23,7 +23,7 @@
 			<div class="space-y-6">
 				<ApprovalBar v-if="!systemEntry" doctype="Journal Entry" :name="name" @changed="load" />
 
-				<section class="rounded-xl border border-outline-gray-1">
+				<section class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Lines</h2>
 					<DataTable class="mt-2" :columns="columns" :rows="entry.accounts">
 						<template #asset="{ value }">
@@ -37,7 +37,7 @@
 					</div>
 				</section>
 
-				<section v-if="entry.user_remark" class="rounded-xl border border-outline-gray-1 p-4">
+				<section v-if="entry.user_remark" class="card p-4">
 					<h2 class="mb-2 text-base font-semibold">Description</h2>
 					<p class="whitespace-pre-line text-sm text-ink-gray-8">{{ entry.user_remark }}</p>
 				</section>

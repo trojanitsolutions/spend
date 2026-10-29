@@ -2,6 +2,7 @@ import { createApp } from "vue"
 import { setConfig, toast } from "frappe-ui"
 import App from "./App.vue"
 import router from "./router"
+import { applyTheme } from "./theme"
 import { vTour } from "./training/tour"
 import "./style.css"
 
@@ -22,11 +23,7 @@ setConfig("serverMessagesHandler", (messages: string[]) => {
 	}
 })
 
-// the tab icon follows the favicon set in Frappe's Website Settings
-if (window.favicon) {
-	const link = document.querySelector<HTMLLinkElement>("link[rel='icon']") ?? document.head.appendChild(document.createElement("link"))
-	link.rel = "icon"
-	link.href = window.favicon
-}
+// the active Frontend Template, applied before mount so the default look never flashes
+applyTheme(window.theme)
 
 createApp(App).use(router).directive("tour", vTour).mount("#app")

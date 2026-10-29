@@ -7,14 +7,14 @@
 		</PageHeader>
 
 		<form class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6" @submit.prevent="save">
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Project</legend>
 				<FormControl v-model="doc.project_name" class="sm:col-span-2" label="Project name" required placeholder="e.g. Office fit-out 2026" />
 				<FormControl v-model="doc.start_date" type="date" label="Start date" />
 				<FormControl v-model="doc.end_date" type="date" label="End date" />
 			</fieldset>
 
-			<fieldset class="grid grid-cols-1 gap-4 rounded-xl border border-outline-gray-1 p-4 sm:grid-cols-2">
+			<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2">
 				<legend class="px-1 text-base font-semibold">Budget</legend>
 				<LinkField
 					v-model="doc.budget"
@@ -72,12 +72,12 @@
 				<p v-else class="text-sm text-ink-gray-6 sm:col-span-2">Pick a Budget to see its accounts and what is still free.</p>
 			</fieldset>
 
-			<fieldset class="space-y-3 rounded-xl border border-outline-gray-1 p-4">
+			<fieldset class="space-y-3 card p-4">
 				<legend class="px-1 text-base font-semibold">Expense categories</legend>
 				<p class="text-sm text-ink-gray-6">
 					Bookings on the project can use only these categories. A row without a sub category covers the whole category. Leave the list empty to allow any category.
 				</p>
-				<div v-for="(row, i) in categories" :key="row.key" class="grid grid-cols-1 gap-2 rounded-lg bg-surface-gray-1 p-3 sm:grid-cols-[1fr_1fr_9rem_auto] sm:items-end sm:bg-transparent sm:p-0">
+				<div v-for="(row, i) in categories" :key="row.key" class="grid grid-cols-1 gap-2 rounded-lg bg-surface-gray-1 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_9rem_auto] sm:items-end sm:bg-transparent sm:p-0">
 					<CategoryFields v-model:category="row.expense_category" v-model:sub-category="row.expense_sub_category" :labels="i === 0" />
 					<FormControl v-model="row.budget_amount" type="number" min="0" step="0.01" :label="i === 0 ? 'Budget' : undefined" placeholder="No limit" :aria-label="`Budget of category ${i + 1}`" />
 					<Button variant="ghost" icon="lucide-trash-2" :aria-label="`Remove category ${i + 1}`" @click="categories.splice(i, 1)" />

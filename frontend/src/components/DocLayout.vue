@@ -6,7 +6,7 @@
 			<slot />
 		</div>
 		<aside class="min-w-0 xl:row-span-2">
-			<div class="xl:sticky xl:top-6">
+			<div class="xl:sticky xl:top-24">
 				<AttachmentsPanel :doctype="doctype" :name="name" :files="activity?.attachments" @changed="load" />
 			</div>
 		</aside>

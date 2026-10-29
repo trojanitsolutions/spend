@@ -1,5 +1,5 @@
 <template>
-	<section class="rounded-xl border border-outline-gray-1 p-4">
+	<section class="card p-4">
 		<div class="mb-3 flex items-center justify-between gap-2">
 			<h2 class="text-base font-semibold">
 				Attachments

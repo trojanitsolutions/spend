@@ -26,6 +26,13 @@ frappe.query_reports["Project Category Monthly"] = {
 			get_query: () => ({ filters: { company: frappe.query_report.get_filter_value("company"), is_parent_category: 1 } }),
 		},
 		{ fieldname: "fiscal_year", label: __("Fiscal Year"), fieldtype: "Link", options: "Fiscal Year" },
+		{
+			fieldname: "period",
+			label: __("Period"),
+			fieldtype: "Select",
+			options: ["Monthly", "Quarterly", "Yearly"],
+			default: "Monthly",
+		},
 	],
 	tree: true,
 	name_field: "category",

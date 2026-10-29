@@ -28,7 +28,7 @@
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-					<section class="rounded-xl border border-outline-gray-1 p-4 lg:col-span-1">
+					<section class="card p-4 lg:col-span-1">
 						<h2 class="mb-3 text-base font-semibold">Details</h2>
 						<dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
 							<template v-for="[label, value] in details" :key="label">
@@ -41,7 +41,7 @@
 						</dl>
 					</section>
 
-					<section class="rounded-xl border border-outline-gray-1 lg:col-span-2">
+					<section class="card lg:col-span-2">
 						<div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-6">
 							<h2 class="text-base font-semibold">Depreciation schedule</h2>
 							<div class="w-full sm:w-56"><UsageBar neutral :value="depreciatedPct" :caption="percent(depreciatedPct)" label="Depreciated" /></div>
@@ -56,7 +56,7 @@
 					</section>
 				</div>
 
-				<section v-if="asset.project_movements?.length" class="rounded-xl border border-outline-gray-1">
+				<section v-if="asset.project_movements?.length" class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Project history</h2>
 					<DataTable class="mt-2" :columns="moveColumns" :rows="moves">
 						<template #from_project="{ value }">
@@ -70,7 +70,7 @@
 					</DataTable>
 				</section>
 
-				<section v-if="detail.running_costs.length" class="rounded-xl border border-outline-gray-1">
+				<section v-if="detail.running_costs.length" class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Running costs</h2>
 					<DataTable
 						class="mt-2"
@@ -86,7 +86,7 @@
 					</DataTable>
 				</section>
 
-				<section v-if="detail.entries.length" class="rounded-xl border border-outline-gray-1">
+				<section v-if="detail.entries.length" class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Accounting entries</h2>
 					<DataTable
 						class="mt-2"

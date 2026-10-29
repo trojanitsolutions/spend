@@ -43,7 +43,7 @@
 					</template>
 				</p>
 
-				<section class="rounded-xl border border-outline-gray-1">
+				<section class="card">
 					<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payment schedule</h2>
 					<DataTable class="mt-2" :columns="scheduleColumns" :rows="rp.schedule">
 						<template #status="{ row }"><StatusBadge :status="rowStatus(row)" /></template>
@@ -54,7 +54,7 @@
 					</DataTable>
 				</section>
 
-				<section class="rounded-xl border border-outline-gray-1 p-4">
+				<section class="card p-4">
 					<h2 class="mb-3 text-base font-semibold">Details</h2>
 					<dl class="grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
 						<div v-for="[label, value] in details" :key="label" class="flex justify-between gap-4">

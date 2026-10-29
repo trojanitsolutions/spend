@@ -12,6 +12,7 @@ from frappe.utils.modules import get_blocked_modules
 
 from spend.spend.accounting import GL_PRECISION, get_fiscal_year
 from spend.spend.approval import get_active_approvals
+from spend.spend.doctype.frontend_template.frontend_template import get_active_template
 from spend.projects.doctype.project.project import get_bill_totals, get_spend_by_project, make_project_row
 from spend.purchasing.doctype.recurring_payment.recurring_payment import get_recurring_rows, get_upcoming_payments
 from spend.spend.setup import ROLES
@@ -84,11 +85,13 @@ def get_boot() -> dict:
 				"Item",
 				"Item Group",
 				"UOM",
+				"Frontend Template",
 			)
 		},
 		"reports": get_allowed_reports(blocked),
 		"can_setup": bool(frappe.has_permission("Company", "create")),
 		"is_trainer": is_trainer(),
+		"theme": get_active_template(),
 		"default_currency": frappe.db.get_single_value("System Settings", "currency") or "INR",
 	}
 
@@ -612,3 +615,25 @@ def get_item_groups(company: str) -> list[dict]:
 		group.buying_cost_center = row.get("buying_cost_center")
 		group.items = counts.get(group.name, 0)
 	return groups
+
+
+@frappe.whitelist()
+def get_frontend_templates() -> list:
+	"""Templates for the Appearance card in Settings."""
+	check_app_permission()
+	frappe.has_permission("Frontend Template", "read", throw=True)
+	return frappe.get_list(
+		"Frontend Template",
+		fields=["name", "description", "is_active", "is_standard", "color_mode", "primary_color"],
+		order_by="is_standard desc, template_name",
+	)
+
+
+@frappe.whitelist(methods=["POST"])
+def activate_frontend_template(name: str) -> dict:
+	check_app_permission()
+	template = frappe.get_doc("Frontend Template", name)
+	template.check_permission("write")
+	template.is_active = 1
+	template.save()
+	return get_active_template()
