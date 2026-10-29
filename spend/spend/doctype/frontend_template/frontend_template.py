@@ -41,17 +41,6 @@ main > * > .flex.flex-wrap.items-end.gap-3:not(.bar-glass) {
 }
 """
 
-# the selected sidebar row is a soft light band with white text, not a white pill
-NAVY_SIDEBAR_CSS = """
-.sidebar-dark {
-	--accent-tint: rgb(255 255 255 / 0.16);
-	--accent-ink: #ffffff;
-}
-.sidebar-dark .nav-active .bg-surface-gray-10 {
-	background-color: rgb(255 255 255 / 0.18);
-}
-"""
-
 # fields the /spend app reads
 THEME_FIELDS = (
 	"name",
@@ -85,7 +74,7 @@ STANDARD_TEMPLATES = (
 		"primary_color": "#1d4ed8",
 		"sidebar_color": "#0f1a36",
 		"corner_style": "Rounded",
-		"custom_css": CARDS_CSS + NAVY_SIDEBAR_CSS,
+		"custom_css": CARDS_CSS,
 	},
 )
 

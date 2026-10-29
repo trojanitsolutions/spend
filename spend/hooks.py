@@ -248,6 +248,7 @@ fixtures = [
 		"filters": [["name", "in", ["Send for Approval", "Approve", "Reject", "Resubmit", "Revise"]]],
 	},
 	{"dt": "Workflow", "filters": [["name", "in", APPROVAL_WORKFLOWS]]},
+	{"dt": "Frontend Template"},
 ]
 
 # Spend sends these by email itself, when Spend Settings allows it
