@@ -10,7 +10,7 @@
 			:title="session.error === 'forbidden' ? 'No access to Spend' : 'Could not load Spend'"
 			:message="
 				session.error === 'forbidden'
-					? 'Ask an administrator for the Accounts Manager role.'
+					? 'Ask an administrator for access to Spend.'
 					: 'Check your connection and reload the page.'
 			"
 		>
@@ -26,7 +26,7 @@
 			class="h-screen"
 			icon="lucide-building-2"
 			title="Spend is not set up yet"
-			message="Ask an Accounts Manager to create the company."
+			message="Ask an administrator to create the company."
 		>
 			<Button label="Log out" @click="logout" />
 		</EmptyState>

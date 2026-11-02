@@ -391,10 +391,10 @@ def get_notifications(limit: int = 20, unread_only: int = 0) -> list[dict]:
 @frappe.whitelist()
 def get_counts(company: str | None = None) -> dict:
 	"""Unread notifications and documents waiting at an approval stage the user's roles can act on."""
-	from spend.spend.approval import get_active_approvals
+	from spend.spend.approval import can_approve, get_active_approvals
 
 	pending = 0
-	if "General Manager" in frappe.get_roles():
+	if can_approve():
 		for doctype in get_active_approvals():
 			if not frappe.has_permission(doctype, "read"):
 				continue

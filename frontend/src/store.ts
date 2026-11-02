@@ -39,11 +39,12 @@ export const session = reactive({
 	currentFiscalYear: null as string | null,
 	permissions: {} as Perms,
 	approvals: [] as string[],
-	roles: [] as string[],
 	reports: [] as string[],
 	unread: 0,
 	company: "" as string,
 	canSetup: false,
+	canApprove: false,
+	deskAccess: false,
 	isTrainer: false,
 	defaultCurrency: "",
 })
@@ -88,12 +89,8 @@ export async function submitOrSend(doctype: string, name: string): Promise<boole
 	return false
 }
 
-export function hasRole(role: string) {
-	return session.roles.includes(role)
-}
-
-/** Desk is for System Managers; the server sends everyone else back to /spend. */
-export const deskAccess = computed(() => hasRole("System Manager"))
+/** Whether the server lets this user into Desk; everyone else is sent back to /spend. */
+export const deskAccess = computed(() => session.deskAccess)
 
 export function setCompany(name: string) {
 	session.company = name
@@ -145,9 +142,10 @@ async function fetchSession() {
 			currentFiscalYear: boot.current_fiscal_year,
 			permissions: boot.permissions,
 			approvals: boot.approvals,
-			roles: boot.roles,
 			reports: boot.reports,
 			canSetup: boot.can_setup,
+			canApprove: boot.can_approve,
+			deskAccess: boot.desk_access,
 			isTrainer: boot.is_trainer,
 			defaultCurrency: boot.default_currency,
 		})

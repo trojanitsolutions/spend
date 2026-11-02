@@ -1,13 +1,13 @@
 <template>
 	<div>
-		<PageHeader title="Approvals" subtitle="Documents waiting for your approval. The General Manager approves every document." />
+		<PageHeader title="Approvals" subtitle="Documents waiting for your approval." />
 
 		<div class="p-4 sm:p-6">
 			<EmptyState
 				v-if="!loading && !rows.length"
 				icon="lucide-circle-check"
 				title="Nothing to approve"
-				:message="canApprove ? 'Documents sent for approval appear here.' : 'Only the General Manager approves documents.'"
+				:message="canApprove ? 'Documents sent for approval appear here.' : 'Your role cannot approve documents.'"
 			/>
 			<DataTable v-else :columns="columns" :rows="rows" :loading="loading" clickable row-key="name" @row-click="open">
 				<template #title="{ row }">
@@ -41,7 +41,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import StatusBadge from "@/components/StatusBadge.vue"
 import { api, applyAction, APPROVAL } from "@/api"
 import { money } from "@/format"
-import { hasRole, session } from "@/store"
+import { session } from "@/store"
 import { refreshCounts } from "@/notifications"
 
 const router = useRouter()
@@ -51,7 +51,7 @@ const busy = ref("")
 const rejecting = ref(false)
 const reason = ref("")
 const target = ref<any>(null)
-const canApprove = computed(() => hasRole("General Manager"))
+const canApprove = computed(() => session.canApprove)
 
 const columns: Column[] = [
 	{ key: "title", label: "Document" },

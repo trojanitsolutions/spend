@@ -11,18 +11,44 @@ from frappe.utils import add_months, flt, get_first_day, get_last_day, getdate, 
 from frappe.utils.modules import get_blocked_modules
 
 from spend.spend.accounting import GL_PRECISION, get_fiscal_year
-from spend.spend.approval import get_active_approvals
+from spend.spend.approval import can_approve, get_active_approvals
 from spend.spend.doctype.frontend_template.frontend_template import get_active_template
 from spend.projects.doctype.project.project import get_bill_totals, get_spend_by_project, make_project_row
 from spend.purchasing.doctype.recurring_payment.recurring_payment import get_recurring_rows, get_upcoming_payments
-from spend.spend.setup import ROLES
+from spend.spend.desk_access import has_desk_access
 from spend.training.access import is_trainer
 
-APP_ROLES = {*ROLES, "System Manager"}
+# doctypes whose permissions the web app reads; any role with read on one of them may open it
+APP_DOCTYPES = (
+	"Asset",
+	"Budget",
+	"Journal Entry",
+	"Company",
+	"Account",
+	"Cost Center",
+	"GL Entry",
+	"Fiscal Year",
+	"Supplier",
+	"Purchase Invoice",
+	"Supplier Payment",
+	"Project",
+	"Expense Category",
+	"Task",
+	"Recurring Payment",
+	"Spend Settings",
+	"Item",
+	"Item Group",
+	"UOM",
+	"Frontend Template",
+)
 
 
 def has_app_permission() -> bool:
-	return frappe.session.user == "Administrator" or bool(APP_ROLES & set(frappe.get_roles()))
+	"""Any role works: the user may open Spend when they can read one of its doctypes or reports."""
+	if frappe.session.user == "Administrator":
+		return True
+	blocked = set(get_blocked_modules())
+	return any(can_read(doctype, blocked) for doctype in APP_DOCTYPES) or bool(get_allowed_reports(blocked))
 
 
 def check_app_permission():
@@ -55,7 +81,6 @@ def get_boot() -> dict:
 		"fiscal_years": fiscal_years,
 		"current_fiscal_year": get_fiscal_year(nowdate(), throw=False),
 		"approvals": get_active_approvals(),
-		"roles": sorted(APP_ROLES & set(frappe.get_roles())),
 		"permissions": {
 			doctype: {
 				"read": can_read(doctype, blocked),
@@ -65,31 +90,12 @@ def get_boot() -> dict:
 				"delete": frappe.has_permission(doctype, "delete"),
 				"cancel": frappe.has_permission(doctype, "cancel"),
 			}
-			for doctype in (
-				"Asset",
-				"Budget",
-				"Journal Entry",
-				"Company",
-				"Account",
-				"Cost Center",
-				"GL Entry",
-				"Fiscal Year",
-				"Supplier",
-				"Purchase Invoice",
-				"Supplier Payment",
-				"Project",
-				"Expense Category",
-				"Task",
-				"Recurring Payment",
-				"Spend Settings",
-				"Item",
-				"Item Group",
-				"UOM",
-				"Frontend Template",
-			)
+			for doctype in APP_DOCTYPES
 		},
 		"reports": get_allowed_reports(blocked),
 		"can_setup": bool(frappe.has_permission("Company", "create")),
+		"can_approve": can_approve(),
+		"desk_access": has_desk_access(),
 		"is_trainer": is_trainer(),
 		"theme": get_active_template(),
 		"default_currency": frappe.db.get_single_value("System Settings", "currency") or "INR",

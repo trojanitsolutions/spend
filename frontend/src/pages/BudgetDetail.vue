@@ -96,7 +96,7 @@ import UsageBar from "@/components/UsageBar.vue"
 import VersionsCard from "@/components/VersionsCard.vue"
 import { api, type BudgetAllocation, cancelDoc, getBudgetAllocation, getDoc, getVersions, submitDoc, type Version } from "@/api"
 import { money, percent, utilizationTone } from "@/format"
-import { can, currency, deskAccess, hasRole, needsApproval } from "@/store"
+import { can, currency, deskAccess, needsApproval } from "@/store"
 
 const props = defineProps<{ name: string }>()
 
@@ -106,7 +106,7 @@ const summary = ref<any>(null)
 const versions = ref<Version[]>([])
 const allocation = ref<BudgetAllocation | null>(null)
 const busy = ref(false)
-const canCancel = computed(() => hasRole("Accounts Manager") || hasRole("General Manager"))
+const canCancel = computed(() => can("Budget", "cancel"))
 const amendedAs = computed(() => versions.value[versions.value.findIndex((v) => v.name === props.name) + 1])
 // a project that holds the budget alone takes the approved amendment as its share
 const soleProject = computed(() => {

@@ -64,6 +64,23 @@ def get_active_approvals() -> list[str]:
 	return [doctype for doctype in APPROVAL_DOCTYPES if is_approval_required(doctype)]
 
 
+def can_approve(user: str | None = None) -> bool:
+	"""Whether one of the user's roles may approve a document type they can read, as its
+	workflow is configured, so a new role on the Approve transition works without code."""
+	roles = set(frappe.get_roles(user))
+	for doctype in get_active_approvals():
+		if not frappe.has_permission(doctype, "read", user=user):
+			continue
+		approvers = frappe.get_all(
+			"Workflow Transition",
+			filters={"parent": workflow_name(doctype), "parenttype": "Workflow", "action": APPROVE},
+			pluck="allowed",
+		)
+		if roles & set(approvers):
+			return True
+	return False
+
+
 def check_approved(doc):
 	"""Block a submit that was not approved."""
 	if doc.doctype == "Journal Entry" and doc.voucher_type in AUTO_ENTRY_TYPES:
@@ -244,7 +261,7 @@ def get_pending_approvals(company: str | None = None) -> list[dict]:
 	from spend.api import check_app_permission
 
 	check_app_permission()
-	if "General Manager" not in frappe.get_roles():
+	if not can_approve():
 		return []
 
 	rows = []
