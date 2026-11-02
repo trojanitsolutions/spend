@@ -3,7 +3,7 @@
 		<PageHeader :title="amendOf ? `Amend ${amendOf}` : 'New Budget'" :subtitle="amendOf ? 'The amendment replaces the cancelled budget once it is approved' : undefined" :back="back">
 			<template #actions>
 				<Button label="Save Draft" :loading="saving" :disabled="loading" @click="save(false)" />
-				<Button v-if="can('Budget', 'submit')" variant="solid" :label="needsApproval('Budget') ? 'Save & Send for Approval' : 'Save & Submit'" :loading="saving" :disabled="loading" @click="save(true)" />
+				<Button v-if="canSubmitOrSend('Budget')" variant="solid" :label="needsApproval('Budget') ? 'Save & Send for Approval' : 'Save & Submit'" :loading="saving" :disabled="loading" @click="save(true)" />
 			</template>
 		</PageHeader>
 
@@ -78,7 +78,7 @@ import LinkField from "@/components/LinkField.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import { getAmendment, getBudgetAllocation, insertDoc } from "@/api"
 import { money } from "@/format"
-import { can, currency, needsApproval, session, submitOrSend } from "@/store"
+import { canSubmitOrSend, currency, needsApproval, session, submitOrSend } from "@/store"
 
 interface Period {
 	period_name: string

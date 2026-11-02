@@ -310,16 +310,32 @@ class TestApproval(SpendTestCase):
 		self.assertEqual(project.workflow_state, APPROVED)
 
 	def test_project_roles_send_expenses_but_cannot_approve(self):
-		for user in (PROJECT_MANAGER, PROJECT_USER):
+		# a Project User's expense waits for the Project Manager first
+		for user, first in ((PROJECT_MANAGER, PENDING_GM), (PROJECT_USER, PENDING_PM)):
 			entry = self.as_user(
 				user, make_journal_entry, account("Office Rent"), account("Cash"), 500, "2025-04-01", submit=False
 			)
 			entry = self.act(user, entry, SEND)
-			self.assertEqual(entry.workflow_state, PENDING_GM)
+			self.assertEqual(entry.workflow_state, first)
 			with self.assertRaises(WorkflowTransitionError):
 				self.act(user, entry, APPROVE)
 			with self.assertRaises(frappe.PermissionError):
 				self.as_user(user, entry.submit)
+
+		with self.assertRaises(WorkflowTransitionError):
+			self.act(GM, entry, APPROVE)
+		entry = self.act(PROJECT_MANAGER, entry, APPROVE)
+		self.assertEqual(entry.workflow_state, PENDING_GM)
+		entry = self.act(GM, entry, APPROVE)
+		self.assertEqual((entry.workflow_state, entry.docstatus), (APPROVED, 1))
+
+	def test_project_user_creates_project_for_pm_then_gm(self):
+		project = self.as_user(PROJECT_USER, make_project, "_Test PU Project", budget=10000)
+		project = self.act(PROJECT_USER, project, SEND)
+		self.assertEqual(project.workflow_state, PENDING_PM)
+		project = self.act(PROJECT_MANAGER, project, APPROVE)
+		project = self.act(GM, project, APPROVE)
+		self.assertEqual(project.workflow_state, APPROVED)
 
 	# ------------------------------------------------------------ notifications
 

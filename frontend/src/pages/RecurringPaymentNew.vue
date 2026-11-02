@@ -7,7 +7,7 @@
 		>
 			<template #actions>
 				<Button label="Save Draft" :loading="saving" @click="save(false)" />
-				<Button v-if="can('Recurring Payment', 'submit')" variant="solid" :label="needsApproval('Recurring Payment') ? 'Save & Send for Approval' : 'Save & Activate'" :loading="saving" @click="save(true)" />
+				<Button v-if="canSubmitOrSend('Recurring Payment')" variant="solid" :label="needsApproval('Recurring Payment') ? 'Save & Send for Approval' : 'Save & Activate'" :loading="saving" @click="save(true)" />
 			</template>
 		</PageHeader>
 
@@ -106,7 +106,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import ScheduleTable, { scheduleRow, type ScheduleRow } from "@/components/ScheduleTable.vue"
 import { api, getAmendment, getRecurringRoom, insertDoc, type RecurringRoom } from "@/api"
 import { date, money, today } from "@/format"
-import { can, currency, needsApproval, session, submitOrSend } from "@/store"
+import { canSubmitOrSend, currency, needsApproval, session, submitOrSend } from "@/store"
 
 const FREQUENCIES = ["Monthly", "Quarterly", "Yearly", "Custom"]
 

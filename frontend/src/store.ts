@@ -85,6 +85,12 @@ export function needsApproval(doctype: string) {
 	return session.approvals.includes(doctype)
 }
 
+/** Whether the user may post this doctype, or send it for approval when it needs approval.
+ * Sending is a workflow action, so it needs only write access; the workflow decides who sends. */
+export function canSubmitOrSend(doctype: string) {
+	return needsApproval(doctype) ? can(doctype, "write") : can(doctype, "submit")
+}
+
 /** Submit the document, or send it for approval when its type needs approval. True when sent. */
 export async function submitOrSend(doctype: string, name: string): Promise<boolean> {
 	if (needsApproval(doctype)) {

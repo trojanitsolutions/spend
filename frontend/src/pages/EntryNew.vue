@@ -103,8 +103,8 @@
 
 			<div class="flex justify-end gap-2">
 				<Button v-tour="'entry.save_draft'" label="Save Draft" :loading="saving" @click="save(false)" />
-				<Button v-if="repeating && can('Recurring Payment', 'submit')" type="submit" variant="solid" :label="needsApproval('Recurring Payment') ? 'Send for Approval' : 'Save & Activate'" :loading="saving" />
-				<Button v-else-if="!repeating && can('Journal Entry', 'submit')" v-tour="'entry.post'" type="submit" variant="solid" :label="needsApproval('Journal Entry') ? 'Send for Approval' : 'Post'" :loading="saving" :disabled="mode === 'journal' && !balanced" />
+				<Button v-if="repeating && canSubmitOrSend('Recurring Payment')" type="submit" variant="solid" :label="needsApproval('Recurring Payment') ? 'Send for Approval' : 'Save & Activate'" :loading="saving" />
+				<Button v-else-if="!repeating && canSubmitOrSend('Journal Entry')" v-tour="'entry.post'" type="submit" variant="solid" :label="needsApproval('Journal Entry') ? 'Send for Approval' : 'Post'" :loading="saving" :disabled="mode === 'journal' && !balanced" />
 			</div>
 		</form>
 	</div>
@@ -120,7 +120,7 @@ import PageHeader from "@/components/PageHeader.vue"
 import ScheduleTable, { scheduleRow, type ScheduleRow } from "@/components/ScheduleTable.vue"
 import { api, BOOKING_ACCOUNT_QUERY, getAllowedAccounts, getDoc, getRecurringRoom, insertDoc, pickAllowedAccount, type RecurringRoom } from "@/api"
 import { date, money, today } from "@/format"
-import { can, currency, needsApproval, session, submitOrSend } from "@/store"
+import { can, canSubmitOrSend, currency, needsApproval, session, submitOrSend } from "@/store"
 
 // an expense is the simple form; a journal entry has free debit and credit lines
 const props = defineProps<{ kind: "expense" | "journal" }>()

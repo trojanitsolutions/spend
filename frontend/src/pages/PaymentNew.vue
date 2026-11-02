@@ -89,7 +89,7 @@
 			<div class="flex flex-wrap items-center justify-end gap-3">
 				<span v-if="overpaid" class="text-sm text-ink-red-4">An amount is more than the bill's outstanding.</span>
 				<span class="text-base font-semibold tabular-nums">Paying {{ fmt(total) }}</span>
-				<Button v-tour="'payment.submit'" type="submit" variant="solid" :label="needsApproval('Supplier Payment') ? 'Send for Approval' : 'Submit Payment'" :loading="saving" :disabled="!total || overpaid || !can('Supplier Payment', 'submit')" />
+				<Button v-tour="'payment.submit'" type="submit" variant="solid" :label="needsApproval('Supplier Payment') ? 'Send for Approval' : 'Submit Payment'" :loading="saving" :disabled="!total || overpaid || !canSubmitOrSend('Supplier Payment')" />
 			</div>
 		</form>
 	</div>
@@ -103,7 +103,7 @@ import LinkField from "@/components/LinkField.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import { api, insertDoc } from "@/api"
 import { date, money, today } from "@/format"
-import { can, currency, needsApproval, session, submitOrSend } from "@/store"
+import { canSubmitOrSend, currency, needsApproval, session, submitOrSend } from "@/store"
 
 const MODES = ["Bank Transfer", "Cash", "Cheque", "Card", "UPI"]
 

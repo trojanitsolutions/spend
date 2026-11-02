@@ -3,7 +3,7 @@
 		<PageHeader title="New Bill" subtitle="Records what you owe a supplier and books the expense" :back="{ to: '/bills', label: 'Bills' }">
 			<template #actions>
 				<Button v-tour="'bill.save_draft'" label="Save Draft" :loading="saving" @click="save(false)" />
-				<Button v-if="can('Purchase Invoice', 'submit')" v-tour="'bill.submit'" variant="solid" :label="needsApproval('Purchase Invoice') ? 'Save & Send for Approval' : 'Save & Submit'" :loading="saving" @click="save(true)" />
+				<Button v-if="canSubmitOrSend('Purchase Invoice')" v-tour="'bill.submit'" variant="solid" :label="needsApproval('Purchase Invoice') ? 'Save & Send for Approval' : 'Save & Submit'" :loading="saving" @click="save(true)" />
 			</template>
 		</PageHeader>
 
@@ -114,7 +114,7 @@ import LinkField from "@/components/LinkField.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import { api, getAllowedAccounts, getDoc, insertDoc, pickAllowedAccount } from "@/api"
 import { addDays, money, today } from "@/format"
-import { can, currency, needsApproval, session, submitOrSend } from "@/store"
+import { can, canSubmitOrSend, currency, needsApproval, session, submitOrSend } from "@/store"
 
 const PAYMENT_TERMS_DAYS = 30
 

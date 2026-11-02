@@ -35,9 +35,12 @@ APPROVAL_DOCTYPES = {
 # roles that edit drafts and send them for approval; the project roles only where they work
 SENDERS = ("Accounts Manager", "General Manager")
 PROJECT_SENDERS = {
-	"Project": ("Project Manager",),
+	"Project": ("Project Manager", "Project User"),
 	"Journal Entry": ("Project Manager", "Project User"),
 }
+# what these roles send goes to the Project Manager first, then to the General Manager;
+# every project does
+PM_FIRST_SENDERS = {"Journal Entry": ("Project User",)}
 
 # Journal Entries posted by the system for documents that were approved themselves
 AUTO_ENTRY_TYPES = ("Depreciation Entry", "Asset Capitalization", "Recurring Payment")
@@ -164,11 +167,22 @@ def get_senders(doctype: str) -> tuple[str, ...]:
 	return SENDERS + PROJECT_SENDERS.get(doctype, ())
 
 
+def get_first_step(doctype: str, role: str) -> str:
+	"""The state a document sent by this role waits in first."""
+	if doctype == "Project" or role in PM_FIRST_SENDERS.get(doctype, ()):
+		return PENDING_PM
+	return PENDING_GM
+
+
+def has_pm_step(doctype: str) -> bool:
+	return doctype == "Project" or doctype in PM_FIRST_SENDERS
+
+
 def get_states(doctype: str) -> list[dict]:
 	submittable = frappe.get_meta(doctype).is_submittable
 	extra = PROJECT_SENDERS.get(doctype, ())
 	states = [(DRAFT, 0, "Accounts Manager"), *((DRAFT, 0, role) for role in extra)]
-	if doctype == "Project":
+	if has_pm_step(doctype):
 		states.append((PENDING_PM, 0, "Project Manager"))
 	states += [
 		(PENDING_GM, 0, "General Manager"),
@@ -182,13 +196,12 @@ def get_states(doctype: str) -> list[dict]:
 
 
 def get_transitions_rows(doctype: str, allow_self_approval: int) -> list[dict]:
-	# a project is approved by the Project Manager first, then by the General Manager
-	first = PENDING_PM if doctype == "Project" else PENDING_GM
 	rows = []
 	for role in get_senders(doctype):
+		first = get_first_step(doctype, role)
 		rows.append((DRAFT, SEND, first, role))
 		rows.append((REJECTED, RESUBMIT, first, role))
-	if doctype == "Project":
+	if has_pm_step(doctype):
 		rows += [
 			(PENDING_PM, APPROVE, PENDING_GM, "Project Manager"),
 			(PENDING_PM, REJECT, REJECTED, "Project Manager"),
