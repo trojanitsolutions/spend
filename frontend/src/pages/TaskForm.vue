@@ -14,7 +14,7 @@
 		</PageHeader>
 
 		<CompleteTaskDialog v-if="doc" v-model:open="completeOpen" :tasks="[doc.name]" @done="load" />
-		<DocLayout doctype="Task" :name="doc?.name" :version="doc?.modified">
+		<DocLayout doctype="Task" :name="doc?.name" :version="doc?.modified" assignable>
 			<form :class="doc ? 'space-y-6' : 'mx-auto max-w-3xl space-y-6'" @submit.prevent="save">
 				<fieldset class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-2" :disabled="!canWrite">
 					<legend class="px-1 text-base font-semibold">Task</legend>
@@ -74,7 +74,8 @@
 							/>
 						</div>
 					</div>
-					<div>
+					<!-- a saved task is assigned from the side panel -->
+					<div v-if="!doc">
 						<div class="mb-1.5 text-xs text-ink-gray-5">Assigned to</div>
 						<div class="flex flex-wrap items-center gap-2">
 							<Badge v-for="user in draft.assign" :key="user" theme="blue" class="cursor-pointer" :label="`${user} ×`" @click="draft.assign = draft.assign.filter((u) => u !== user)" />

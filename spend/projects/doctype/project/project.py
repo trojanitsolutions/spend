@@ -686,6 +686,21 @@ def get_project_summary(project: str) -> dict:
 			order_by="posting_date desc, creation desc",
 			limit=100,
 		),
+		# expenses whose lines are booked to the project, including ones awaiting approval
+		"expenses": frappe.get_list(
+			"Journal Entry",
+			filters=[
+				["voucher_type", "in", ["Expense Entry", "Recurring Payment"]],
+				["docstatus", "<", 2],
+				["Journal Entry Account", "project", "=", doc.name],
+			],
+			fields=["name", "title", "voucher_type", "posting_date", "total_debit", "docstatus", "workflow_state"],
+			order_by="posting_date desc, creation desc",
+			distinct=True,
+			limit=100,
+		)
+		if frappe.has_permission("Journal Entry", "read")
+		else [],
 		"recurring": get_recurring_rows({"project": doc.name}, limit=100)
 		if frappe.has_permission("Recurring Payment", "read")
 		else [],

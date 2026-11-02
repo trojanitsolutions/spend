@@ -32,7 +32,7 @@
 			</template>
 		</PageHeader>
 
-		<DocLayout doctype="Project" :name="name" :version="project.modified">
+		<DocLayout doctype="Project" :name="name" :version="project.modified" assignable>
 			<div class="space-y-6">
 				<ApprovalBar doctype="Project" :name="name" @changed="load" />
 				<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -200,6 +200,26 @@
 					</section>
 
 					<section class="card">
+						<div class="flex items-center justify-between px-4 pt-4 sm:px-6">
+							<h2 class="text-base font-semibold">Expenses</h2>
+							<Button
+								v-if="project.status === 'Open' && usable && can('Journal Entry', 'create')"
+								variant="ghost"
+								icon-left="lucide-plus"
+								label="Book Expense"
+								@click="$router.push({ path: '/expenses/new', query: { project: project.name } })"
+							/>
+						</div>
+						<DataTable class="mt-2" :columns="expenseColumns" :rows="detail.expenses" clickable empty-text="No expenses booked to this project yet" @row-click="(r) => $router.push(entryPath(r.name, r.voucher_type))">
+							<template #title="{ row }">
+								<div class="max-w-72 truncate font-medium text-ink-gray-9">{{ row.title }}</div>
+								<div class="text-sm text-ink-gray-5">{{ row.name }}</div>
+							</template>
+							<template #docstatus="{ row }"><StatusBadge :status="approvalLabel(row.docstatus, row.workflow_state)" /></template>
+						</DataTable>
+					</section>
+
+					<section class="card">
 						<h2 class="px-4 pt-4 text-base font-semibold sm:px-6">Payments</h2>
 						<DataTable class="mt-2" :columns="paymentColumns" :rows="detail.payments" clickable empty-text="No payments tagged with this project" @row-click="(r) => $router.push(`/payments/${r.name}`)">
 							<template #docstatus="{ value }"><StatusBadge :status="docstatusLabel(value)" /></template>
@@ -305,7 +325,7 @@ import StatusBadge from "@/components/StatusBadge.vue"
 import TreeTable from "@/components/TreeTable.vue"
 import UsageBar from "@/components/UsageBar.vue"
 import { api } from "@/api"
-import { date, docstatusLabel, money, percent } from "@/format"
+import { approvalLabel, date, docstatusLabel, entryPath, money, percent } from "@/format"
 import { can, currency, deskAccess, needsApproval } from "@/store"
 
 const props = defineProps<{ name: string }>()
@@ -335,7 +355,7 @@ const tab = computed<Tab>({
 const tabs = computed(() => {
 	const counts: Partial<Record<Tab, number>> = {
 		tasks: detail.value.tasks.length,
-		bills: detail.value.bills.length,
+		bills: detail.value.bills.length + detail.value.expenses.length,
 		assets: detail.value.assets.length,
 	}
 	return Object.entries(TABS).map(([value, label]) => ({
@@ -421,6 +441,13 @@ const billColumns: Column[] = [
 function payBill(bill: any) {
 	router.push({ path: "/payments/new", query: { supplier: bill.supplier, invoice: bill.name, project: props.name } })
 }
+
+const expenseColumns: Column[] = [
+	{ key: "posting_date", label: "Date", format: date },
+	{ key: "title", label: "Description" },
+	{ key: "docstatus", label: "Status" },
+	{ key: "total_debit", label: "Amount", align: "right", format: (v) => fmt(v) },
+]
 
 const paymentColumns: Column[] = [
 	{ key: "posting_date", label: "Date", format: date },

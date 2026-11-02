@@ -50,6 +50,7 @@ export const TYPE_ICONS: Record<string, string> = {
 	"Bill Reminder": "lucide-calendar-clock",
 	"Recurring Payment": "lucide-repeat",
 	Mention: "lucide-at-sign",
+	Assignment: "lucide-user-check",
 }
 
 export function timeAgo(value: string) {

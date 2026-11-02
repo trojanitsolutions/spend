@@ -6,7 +6,15 @@
 			<slot />
 		</div>
 		<aside class="min-w-0 xl:row-span-2">
-			<div class="xl:sticky xl:top-24">
+			<div class="space-y-6 xl:sticky xl:top-24">
+				<AssignmentsPanel
+					v-if="assignable"
+					:doctype="doctype"
+					:name="name"
+					:users="activity?.assignments"
+					:can-assign="activity?.can_assign"
+					@changed="load"
+				/>
 				<AttachmentsPanel :doctype="doctype" :name="name" :files="activity?.attachments" @changed="load" />
 			</div>
 		</aside>
@@ -17,13 +25,15 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue"
 import ActivityPanel from "@/components/ActivityPanel.vue"
+import AssignmentsPanel from "@/components/AssignmentsPanel.vue"
 import AttachmentsPanel from "@/components/AttachmentsPanel.vue"
-import { getActivity, type ActivityEntry, type Attachment } from "@/api"
+import { getActivity, type Activity } from "@/api"
 
-// `version` is the document's `modified`; a save, submit or approval reloads the activity
-const props = defineProps<{ doctype: string; name?: string; version?: string }>()
+// `version` is the document's `modified`; a save, submit or approval reloads the activity.
+// `assignable` shows who the document is assigned to, as Desk's sidebar does.
+const props = defineProps<{ doctype: string; name?: string; version?: string; assignable?: boolean }>()
 
-const activity = ref<{ attachments: Attachment[]; timeline: ActivityEntry[] } | null>(null)
+const activity = ref<Activity | null>(null)
 
 async function load() {
 	if (!props.name) return

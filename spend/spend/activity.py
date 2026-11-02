@@ -22,6 +22,8 @@ def get_activity(doctype: str, name: str) -> dict:
 	return {
 		"attachments": get_attachments(doc, can_write),
 		"timeline": get_timeline(doc),
+		"assignments": get_assignments(doc),
+		"can_assign": can_write,
 	}
 
 
@@ -102,6 +104,25 @@ def get_permitted_doc(doctype: str, name: str, ptype: str):
 
 def can_remove(owner: str, can_write: bool) -> bool:
 	return can_write or owner == frappe.session.user
+
+
+def get_assignments(doc) -> list[dict]:
+	"""Users the document is assigned to, from its open ToDos, as Desk's sidebar shows them."""
+	users = frappe.get_all(
+		"ToDo",
+		filters={"reference_type": doc.doctype, "reference_name": doc.name, "status": "Open", "allocated_to": ("is", "set")},
+		pluck="allocated_to",
+		order_by="creation",
+	)
+	users = list(dict.fromkeys(users))
+	info = {
+		u.name: u
+		for u in frappe.get_all("User", filters={"name": ("in", users)}, fields=["name", "full_name", "user_image"])
+	}
+	return [
+		{"user": u, "full_name": (info.get(u) or {}).get("full_name") or u, "user_image": (info.get(u) or {}).get("user_image")}
+		for u in users
+	]
 
 
 def get_attachments(doc, can_write: bool) -> list[dict]:

@@ -382,8 +382,11 @@ def get_notifications(limit: int = 20, unread_only: int = 0) -> list[dict]:
 		order_by="creation desc",
 		limit=min(int(limit), 200),
 	)
-	# Frappe's own notifications (mentions, assignments) carry no link; open them in the portal
+	# Frappe's own notifications (mentions, assignments) are HTML and carry no link;
+	# show them as text and open them in the portal
 	for row in rows:
+		row.subject = strip_html(row.subject or "")
+		row.email_content = strip_html(row.email_content or "")
 		if not row.link and row.document_type and row.document_name:
 			row.link = get_app_route(row.document_type, row.document_name)
 	return rows

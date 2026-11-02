@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<PageHeader title="Notifications" subtitle="Approval requests and outcomes, budget alerts, bills due and recurring payments">
+		<PageHeader title="Notifications" subtitle="Approval requests and outcomes, assignments, budget alerts, bills due and recurring payments">
 			<template #actions>
 				<Button label="Mark all read" icon-left="lucide-check-check" :disabled="!counts.unread" @click="readAll" />
 			</template>
@@ -37,7 +37,9 @@ import EmptyState from "@/components/EmptyState.vue"
 import PageHeader from "@/components/PageHeader.vue"
 import { counts, getNotifications, markRead, notificationTarget, type SpendNotification, timeAgo, TYPE_ICONS } from "@/notifications"
 
-const FILTERS = ["All", "Unread", "Approval", "Budget Alert", "Bill Reminder", "Recurring Payment"]
+const FILTERS = ["All", "Unread", "Approval", "Assigned", "Budget Alert", "Bill Reminder", "Recurring Payment"]
+// tabs whose label differs from the notification type they show
+const TYPES: Record<string, string> = { Assigned: "Assignment" }
 
 const router = useRouter()
 const items = ref<SpendNotification[]>([])
@@ -48,7 +50,8 @@ const limit = ref(50)
 const shown = computed(() => {
 	if (filter.value === "All") return items.value
 	if (filter.value === "Unread") return items.value.filter((n) => !n.read)
-	return items.value.filter((n) => n.type === filter.value)
+	const type = TYPES[filter.value] || filter.value
+	return items.value.filter((n) => n.type === type)
 })
 
 async function load() {

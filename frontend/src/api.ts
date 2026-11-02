@@ -206,6 +206,12 @@ export function categoryLabel(category?: string | null, subCategory?: string | n
 	return [category, subCategory].filter(Boolean).join(" / ")
 }
 
+export interface Assignee {
+	user: string
+	full_name: string
+	user_image?: string | null
+}
+
 export interface Attachment {
 	name: string
 	file_name: string
@@ -236,6 +242,13 @@ export function getMentionableUsers(doctype: string, name: string) {
 	return api<MentionableUser[]>("spend.spend.activity.get_mentionable_users", { doctype, name })
 }
 
+export interface Activity {
+	attachments: Attachment[]
+	timeline: ActivityEntry[]
+	assignments: Assignee[]
+	can_assign: boolean
+}
+
 export function getActivity(doctype: string, name: string) {
-	return api<{ attachments: Attachment[]; timeline: ActivityEntry[] }>("spend.spend.activity.get_activity", { doctype, name })
+	return api<Activity>("spend.spend.activity.get_activity", { doctype, name })
 }
