@@ -49,7 +49,8 @@ const rejecting = ref(false)
 const reason = ref("")
 
 const HINTS: Record<string, string> = {
-	Draft: "Send it to the General Manager for approval when it is ready.",
+	Draft: "Send it for approval when it is ready.",
+	"Pending PM Approval": "Waiting for the Project Manager.",
 	"Pending GM Approval": "Waiting for the General Manager.",
 	Approved: "Approved by the General Manager.",
 	Rejected: "Rejected. Make the changes, then resubmit it.",

@@ -9,7 +9,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letterhead": null,
- "modified": "2026-10-27 19:00:00.000000",
+ "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project Spend",
@@ -24,6 +24,12 @@
   },
   {
    "role": "Accounts Manager"
+  },
+  {
+   "role": "Project Manager"
+  },
+  {
+   "role": "Project User"
   }
  ],
  "timeout": 0

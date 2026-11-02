@@ -189,7 +189,7 @@
  ],
  "is_tree": 1,
  "links": [],
- "modified": "2026-10-27 19:00:00.000000",
+ "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Task",
@@ -231,6 +231,26 @@
    "report": 1,
    "role": "General Manager",
    "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Project Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Project User",
    "write": 1
   }
  ],

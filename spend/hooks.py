@@ -235,6 +235,7 @@ fixtures = [
 				"in",
 				[
 					"Draft",
+					"Pending PM Approval",
 					"Pending GM Approval",
 					"Approved",
 					"Rejected",

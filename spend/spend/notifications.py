@@ -13,6 +13,7 @@ from spend.spend.accounting import GL_PRECISION, get_balance, get_subtree
 from spend.spend.approval import (
 	APPROVED,
 	PENDING_GM,
+	PENDING_PM,
 	REJECTED,
 	describe,
 	get_app_route,
@@ -130,9 +131,9 @@ def on_approval_change(doc, method=None):
 	actor = frappe.utils.get_fullname(frappe.session.user)
 	note = f" · {info['note']}" if info["note"] else ""
 
-	if new == PENDING_GM:
+	if new in (PENDING_PM, PENDING_GM):
 		notify(
-			users_with_role("General Manager"),
+			users_with_role("Project Manager" if new == PENDING_PM else "General Manager"),
 			_("{0} needs your approval").format(what),
 			doc,
 			_("Sent by {0}").format(actor) + note,
@@ -391,14 +392,13 @@ def get_notifications(limit: int = 20, unread_only: int = 0) -> list[dict]:
 @frappe.whitelist()
 def get_counts(company: str | None = None) -> dict:
 	"""Unread notifications and documents waiting at an approval stage the user's roles can act on."""
-	from spend.spend.approval import can_approve, get_active_approvals
+	from spend.spend.approval import get_active_approvals, get_approvable_states
 
 	pending = 0
-	if can_approve():
-		for doctype in get_active_approvals():
-			if not frappe.has_permission(doctype, "read"):
-				continue
-			filters = {"workflow_state": PENDING_GM, "docstatus": 0, "owner": ("!=", frappe.session.user)}
+	for doctype in get_active_approvals():
+		states = get_approvable_states(doctype)
+		if states and frappe.has_permission(doctype, "read"):
+			filters = {"workflow_state": ("in", states), "docstatus": 0, "owner": ("!=", frappe.session.user)}
 			if company:
 				filters["company"] = company
 			pending += len(frappe.get_list(doctype, filters=filters, pluck="name", limit=500))

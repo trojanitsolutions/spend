@@ -11,6 +11,7 @@ type Theme = "gray" | "blue" | "green" | "amber" | "red" | "violet"
 
 const EXTRA: Record<string, Theme> = {
 	Active: "blue",
+	"Pending PM Approval": "amber",
 	"Pending GM Approval": "amber",
 	Approved: "green",
 	Rejected: "red",

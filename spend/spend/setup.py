@@ -6,7 +6,7 @@
 import frappe
 from frappe import _
 
-ROLES = ("Accounts Manager", "General Manager")
+ROLES = ("Accounts Manager", "General Manager", "Project Manager", "Project User")
 
 # (account_number, account_name, account_type, children). Root entries carry their root type.
 STANDARD_CHART = [

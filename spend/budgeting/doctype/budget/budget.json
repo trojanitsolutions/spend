@@ -153,7 +153,7 @@
    "link_fieldname": "budget"
   }
  ],
- "modified": "2026-10-27 19:00:00.000000",
+ "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Budgeting",
  "name": "Budget",
@@ -204,6 +204,14 @@
    "share": 1,
    "submit": 1,
    "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Project Manager"
+  },
+  {
+   "read": 1,
+   "role": "Project User"
   }
  ],
  "row_format": "Dynamic",

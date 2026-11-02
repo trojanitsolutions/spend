@@ -11,6 +11,7 @@ from spend.spend.approval import (
 	APPROVE,
 	APPROVED,
 	PENDING_GM,
+	PENDING_PM,
 	REJECT,
 	REJECTED,
 	RESUBMIT,
@@ -49,6 +50,8 @@ MANAGER = "_spend_manager@example.com"
 MANAGER_2 = "_spend_manager2@example.com"
 GM = "_spend_gm@example.com"
 GM_2 = "_spend_gm2@example.com"
+PROJECT_MANAGER = "_spend_pm@example.com"
+PROJECT_USER = "_spend_pu@example.com"
 
 
 class TestApproval(SpendTestCase):
@@ -60,6 +63,8 @@ class TestApproval(SpendTestCase):
 		make_user(MANAGER_2, ["Accounts Manager"])
 		make_user(GM, ["General Manager"])
 		make_user(GM_2, ["General Manager"])
+		make_user(PROJECT_MANAGER, ["Project Manager"])
+		make_user(PROJECT_USER, ["Project User"])
 		make_supplier()
 
 	def setUp(self):
@@ -83,6 +88,8 @@ class TestApproval(SpendTestCase):
 
 	def approve_fully(self, doc, preparer=PREPARER):
 		doc = self.act(preparer, doc, SEND)
+		if doc.doctype == "Project":
+			doc = self.act(PROJECT_MANAGER, doc, APPROVE)
 		return self.act(GM, doc, APPROVE)
 
 	def logs_for(self, user, doc=None, notification_type=APPROVAL):
@@ -286,6 +293,33 @@ class TestApproval(SpendTestCase):
 		self.assertEqual(project.workflow_state, "Draft")
 		with self.assertRaises(InactiveProjectError):
 			make_purchase_invoice(items=[("Office Rent", 100, project.name)], submit=False)
+
+	def test_project_needs_project_manager_then_gm(self):
+		project = self.act("Administrator", make_project("_Test Two Step Project", budget=10000), SEND)
+		self.assertEqual(project.workflow_state, PENDING_PM)
+		self.assertEqual(self.as_user(GM, get_pending_approvals), [])
+		with self.assertRaises(WorkflowTransitionError):
+			self.act(GM, project, APPROVE)
+
+		project = self.act(PROJECT_MANAGER, project, APPROVE)
+		self.assertEqual(project.workflow_state, PENDING_GM)
+		with self.assertRaises(WorkflowTransitionError):
+			self.act(PROJECT_MANAGER, project, APPROVE)
+
+		project = self.act(GM, project, APPROVE)
+		self.assertEqual(project.workflow_state, APPROVED)
+
+	def test_project_roles_send_expenses_but_cannot_approve(self):
+		for user in (PROJECT_MANAGER, PROJECT_USER):
+			entry = self.as_user(
+				user, make_journal_entry, account("Office Rent"), account("Cash"), 500, "2025-04-01", submit=False
+			)
+			entry = self.act(user, entry, SEND)
+			self.assertEqual(entry.workflow_state, PENDING_GM)
+			with self.assertRaises(WorkflowTransitionError):
+				self.act(user, entry, APPROVE)
+			with self.assertRaises(frappe.PermissionError):
+				self.as_user(user, entry.submit)
 
 	# ------------------------------------------------------------ notifications
 

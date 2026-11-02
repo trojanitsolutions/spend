@@ -1,7 +1,7 @@
 # Copyright (c) 2026, Trojan IT Solutions and contributors
 # For license information, please see license.txt
 
-"""One-step approval by the General Manager.
+"""Approval by the General Manager, with a first step by the Project Manager on projects.
 
 Built on Frappe Workflow, so Desk shows the approval buttons. A plain `submit()`
 bypasses the workflow, so `check_approved` guards every submit as well.
@@ -13,11 +13,12 @@ from frappe.model.workflow import apply_workflow, get_transitions, has_approval_
 from frappe.utils import flt
 
 DRAFT = "Draft"
+PENDING_PM = "Pending PM Approval"
 PENDING_GM = "Pending GM Approval"
 APPROVED = "Approved"
 REJECTED = "Rejected"
 CANCELLED = "Cancelled"
-PENDING_STATES = (PENDING_GM,)
+PENDING_STATES = (PENDING_PM, PENDING_GM)
 
 SEND, APPROVE, REJECT, RESUBMIT, REVISE = "Send for Approval", "Approve", "Reject", "Resubmit", "Revise"
 
@@ -31,11 +32,19 @@ APPROVAL_DOCTYPES = {
 	"Project": "approve_project",
 }
 
+# roles that edit drafts and send them for approval; the project roles only where they work
+SENDERS = ("Accounts Manager", "General Manager")
+PROJECT_SENDERS = {
+	"Project": ("Project Manager",),
+	"Journal Entry": ("Project Manager", "Project User"),
+}
+
 # Journal Entries posted by the system for documents that were approved themselves
 AUTO_ENTRY_TYPES = ("Depreciation Entry", "Asset Capitalization", "Recurring Payment")
 
 STATE_STYLES = {
 	DRAFT: None,
+	PENDING_PM: "Warning",
 	PENDING_GM: "Warning",
 	APPROVED: "Success",
 	REJECTED: "Danger",
@@ -67,18 +76,22 @@ def get_active_approvals() -> list[str]:
 def can_approve(user: str | None = None) -> bool:
 	"""Whether one of the user's roles may approve a document type they can read, as its
 	workflow is configured, so a new role on the Approve transition works without code."""
+	return any(
+		get_approvable_states(doctype, user)
+		for doctype in get_active_approvals()
+		if frappe.has_permission(doctype, "read", user=user)
+	)
+
+
+def get_approvable_states(doctype: str, user: str | None = None) -> list[str]:
+	"""The workflow states of this doctype at which one of the user's roles may approve."""
+	transitions = frappe.get_all(
+		"Workflow Transition",
+		filters={"parent": workflow_name(doctype), "parenttype": "Workflow", "action": APPROVE},
+		fields=["state", "allowed"],
+	)
 	roles = set(frappe.get_roles(user))
-	for doctype in get_active_approvals():
-		if not frappe.has_permission(doctype, "read", user=user):
-			continue
-		approvers = frappe.get_all(
-			"Workflow Transition",
-			filters={"parent": workflow_name(doctype), "parenttype": "Workflow", "action": APPROVE},
-			pluck="allowed",
-		)
-		if roles & set(approvers):
-			return True
-	return False
+	return list({t.state for t in transitions if t.allowed in roles})
 
 
 def check_approved(doc):
@@ -147,13 +160,21 @@ def setup_workflows():
 		workflow.save()
 
 
+def get_senders(doctype: str) -> tuple[str, ...]:
+	return SENDERS + PROJECT_SENDERS.get(doctype, ())
+
+
 def get_states(doctype: str) -> list[dict]:
 	submittable = frappe.get_meta(doctype).is_submittable
-	states = [
-		(DRAFT, 0, "Accounts Manager"),
+	extra = PROJECT_SENDERS.get(doctype, ())
+	states = [(DRAFT, 0, "Accounts Manager"), *((DRAFT, 0, role) for role in extra)]
+	if doctype == "Project":
+		states.append((PENDING_PM, 0, "Project Manager"))
+	states += [
 		(PENDING_GM, 0, "General Manager"),
 		(APPROVED, 1 if submittable else 0, "General Manager"),
 		(REJECTED, 0, "Accounts Manager"),
+		*((REJECTED, 0, role) for role in extra),
 	]
 	if submittable:
 		states.append((CANCELLED, 2, "Accounts Manager"))
@@ -161,17 +182,23 @@ def get_states(doctype: str) -> list[dict]:
 
 
 def get_transitions_rows(doctype: str, allow_self_approval: int) -> list[dict]:
+	# a project is approved by the Project Manager first, then by the General Manager
+	first = PENDING_PM if doctype == "Project" else PENDING_GM
 	rows = []
-	for role in ("Accounts Manager", "General Manager"):
-		rows.append((DRAFT, SEND, PENDING_GM, role))
-		rows.append((REJECTED, RESUBMIT, PENDING_GM, role))
+	for role in get_senders(doctype):
+		rows.append((DRAFT, SEND, first, role))
+		rows.append((REJECTED, RESUBMIT, first, role))
+	if doctype == "Project":
+		rows += [
+			(PENDING_PM, APPROVE, PENDING_GM, "Project Manager"),
+			(PENDING_PM, REJECT, REJECTED, "Project Manager"),
+		]
 	rows += [
 		(PENDING_GM, APPROVE, APPROVED, "General Manager"),
 		(PENDING_GM, REJECT, REJECTED, "General Manager"),
 	]
 	if doctype == "Project":
-		rows.append((APPROVED, REVISE, DRAFT, "Accounts Manager"))
-		rows.append((APPROVED, REVISE, DRAFT, "General Manager"))
+		rows += [(APPROVED, REVISE, DRAFT, role) for role in get_senders(doctype)]
 	return [
 		{
 			"state": state,
@@ -261,14 +288,12 @@ def get_pending_approvals(company: str | None = None) -> list[dict]:
 	from spend.api import check_app_permission
 
 	check_app_permission()
-	if not can_approve():
-		return []
-
 	rows = []
 	for doctype in get_active_approvals():
-		if not frappe.has_permission(doctype, "read"):
+		states = get_approvable_states(doctype)
+		if not states or not frappe.has_permission(doctype, "read"):
 			continue
-		filters = {"workflow_state": PENDING_GM, "docstatus": 0}
+		filters = {"workflow_state": ("in", states), "docstatus": 0}
 		if company:
 			filters["company"] = company
 		for doc in frappe.get_list(
