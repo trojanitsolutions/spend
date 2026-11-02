@@ -206,7 +206,27 @@ def clear_company_demo_data(company: str) -> dict:
 
 	check_app_permission()
 	frappe.has_permission("Company", "write", company, throw=True)
-	return clear_demo_data(company)
+	result = clear_demo_data(company)
+	# a partial clear keeps the rest logged, so Settings still offers Clear rather than Restore
+	if not has_demo_data(company):
+		frappe.db.set_value("Company", company, "demo_data_cleared", 1)
+	return result
+
+
+@frappe.whitelist(methods=["POST"])
+def restore_company_demo_data(company: str):
+	"""Load the demo data again into a company whose demo data was cleared."""
+	from spend.api import check_app_permission
+	from spend.spend.setup import load_demo_data
+
+	check_app_permission()
+	frappe.has_permission("Company", "write", company, throw=True)
+	if has_demo_data(company) or not frappe.db.get_value("Company", company, "demo_data_cleared"):
+		frappe.throw(_("{0} has no cleared demo data to restore").format(company))
+	error = load_demo_data(company)
+	if error:
+		frappe.throw(_("Demo data could not be restored: {0}").format(error))
+	frappe.db.set_value("Company", company, "demo_data_cleared", 0)
 
 
 def has_demo_data(company: str) -> bool:

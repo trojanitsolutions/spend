@@ -71,13 +71,21 @@
 				<Button v-if="can('Frontend Template', 'create')" type="button" label="New template" icon-left="lucide-plus" href="/app/frontend-template/new" />
 			</fieldset>
 
-			<fieldset v-if="hasDemoData && can('Company', 'write')" class="space-y-3 card p-4">
+			<fieldset v-if="(hasDemoData || canRestoreDemo) && can('Company', 'write')" class="space-y-3 card p-4">
 				<legend class="px-1 text-base font-semibold">Demo data</legend>
-				<p class="text-sm text-ink-gray-6">
-					{{ session.company }} has the sample suppliers, items, bills, payments, expenses, budget, projects, assets and rent added at setup.
-					Clearing cancels and deletes only those, with the entries posted for them. Records you added yourself stay.
-				</p>
-				<Button type="button" theme="red" label="Clear demo data" icon-left="lucide-trash-2" :loading="clearing" @click="confirmClear" />
+				<template v-if="canRestoreDemo">
+					<p class="text-sm text-ink-gray-6">
+						The sample records of {{ session.company }} were cleared. Restore them to see Spend in use again; they are dated in the current fiscal year.
+					</p>
+					<Button type="button" label="Restore demo data" icon-left="lucide-rotate-ccw" :loading="restoring" @click="confirmRestore" />
+				</template>
+				<template v-else>
+					<p class="text-sm text-ink-gray-6">
+						{{ session.company }} has the sample suppliers, items, bills, payments, expenses, budget, projects, assets and rent added at setup.
+						Clearing cancels and deletes only those, with the entries posted for them. Records you added yourself stay.
+					</p>
+					<Button type="button" theme="red" label="Clear demo data" icon-left="lucide-trash-2" :loading="clearing" @click="confirmClear" />
+				</template>
 			</fieldset>
 		</form>
 	</div>
@@ -88,7 +96,7 @@ import { onMounted, reactive, ref } from "vue"
 import { Badge, Button, FormControl, LoadingText, dialog, toast } from "frappe-ui"
 import PageHeader from "@/components/PageHeader.vue"
 import { api } from "@/api"
-import { can, hasDemoData, loadSession, reloadSession, session } from "@/store"
+import { can, canRestoreDemo, hasDemoData, loadSession, reloadSession, session } from "@/store"
 import { applyTheme } from "@/theme"
 
 const APPROVALS = [
@@ -106,6 +114,7 @@ const settings = ref<any>(null)
 const values = reactive<Record<string, any>>({})
 const saving = ref(false)
 const clearing = ref(false)
+const restoring = ref(false)
 const templates = ref<any[] | null>(null)
 const activating = ref("")
 
@@ -144,6 +153,25 @@ function confirmClear() {
 				await reloadSession()
 			} finally {
 				clearing.value = false
+			}
+		},
+	})
+}
+
+function confirmRestore() {
+	const company = session.company
+	dialog.confirm({
+		title: "Restore demo data?",
+		message: `The sample suppliers, items, bills, payments, expenses, budget, projects, assets and rent are added to ${company} again.`,
+		confirmLabel: "Restore demo data",
+		onConfirm: async () => {
+			restoring.value = true
+			try {
+				await api("spend.spend.demo.restore_company_demo_data", { company })
+				toast.success(`Demo data restored in ${company}`)
+				await reloadSession()
+			} finally {
+				restoring.value = false
 			}
 		},
 	})
