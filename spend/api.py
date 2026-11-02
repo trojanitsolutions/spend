@@ -84,6 +84,8 @@ def get_boot() -> dict:
 		"permissions": {
 			doctype: {
 				"read": can_read(doctype, blocked),
+				# a blocked module hides only lists, so one document can still be opened from another page
+				"open": frappe.has_permission(doctype, "read"),
 				"create": frappe.has_permission(doctype, "create"),
 				"submit": frappe.has_permission(doctype, "submit"),
 				"write": frappe.has_permission(doctype, "write"),

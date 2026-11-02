@@ -17,7 +17,7 @@ interface FiscalYear {
 	end_date: string
 }
 
-type Perms = Record<string, { read: boolean; create: boolean; submit: boolean; write: boolean; delete: boolean; cancel: boolean }>
+type Perms = Record<string, { read: boolean; open: boolean; create: boolean; submit: boolean; write: boolean; delete: boolean; cancel: boolean }>
 
 const STORAGE_KEY = "spend:company"
 
@@ -66,13 +66,19 @@ export const currency = computed(
 	() => session.companies.find((c) => c.name === session.company)?.default_currency || "",
 )
 
-export function can(doctype: string, action: "read" | "create" | "submit" | "write" | "delete" | "cancel") {
+export function can(doctype: string, action: "read" | "open" | "create" | "submit" | "write" | "delete" | "cancel") {
 	return Boolean(session.permissions[doctype]?.[action])
 }
 
 /** Whether the user may open this doctype: read permission and its module not blocked for them. */
 export function canRead(doctype: string) {
 	return can(doctype, "read")
+}
+
+/** Whether the user may open one document or a new form of this doctype. Module blocks hide
+ * only lists and the sidebar, so a document reached from another page still opens. */
+export function canOpen(doctype: string) {
+	return can(doctype, "open")
 }
 
 /** Whether the user may run this report: one of their roles is allowed and its module is not blocked. */

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router"
-import { canRead, canRunReport, loadSession, session } from "./store"
+import { canOpen, canRead, canRunReport, loadSession, session } from "./store"
 import { REPORTS } from "./reports"
 
 const router = createRouter({
@@ -63,7 +63,8 @@ router.beforeEach(async (to) => {
 	await loadSession()
 	if (session.error || to.path === "/") return
 	const { doctype, report } = to.meta as { doctype?: string; report?: boolean }
-	if (doctype && !canRead(doctype)) return "/"
+	const single = to.path.endsWith("/new") || "name" in to.params
+	if (doctype && !(single ? canOpen(doctype) : canRead(doctype))) return "/"
 	if (to.meta.trainer && !session.isTrainer) return "/training"
 	if (report) {
 		const slug = to.params.slug
