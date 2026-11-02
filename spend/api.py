@@ -60,7 +60,7 @@ def check_app_permission():
 def get_boot() -> dict:
 	check_app_permission()
 	companies = get_reference_list(
-		"Company", fields=["name", "abbr", "default_currency", "is_training", "demo_data_cleared"], order_by="company_name"
+		"Company", fields=["name", "abbr", "default_currency", "is_training"], order_by="company_name"
 	)
 	fiscal_years = get_reference_list(
 		"Fiscal Year",

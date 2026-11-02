@@ -9,7 +9,6 @@ interface Company {
 	default_currency: string
 	is_training: 0 | 1
 	has_demo_data: boolean
-	demo_data_cleared: 0 | 1
 }
 
 interface FiscalYear {
@@ -57,10 +56,10 @@ export const inTrainingCompany = computed(
 /** The current company holds demo data that can be cleared in Settings. */
 export const hasDemoData = computed(() => !!session.companies.find((c) => c.name === session.company)?.has_demo_data)
 
-/** The current company's demo data was cleared and can be loaded again in Settings. */
+/** The current company has no demo data (it was cleared), so Settings offers to restore it. */
 export const canRestoreDemo = computed(() => {
 	const company = session.companies.find((c) => c.name === session.company)
-	return !!company?.demo_data_cleared && !company.has_demo_data && !company.is_training
+	return !!company && !company.has_demo_data && !company.is_training
 })
 
 export const currency = computed(
